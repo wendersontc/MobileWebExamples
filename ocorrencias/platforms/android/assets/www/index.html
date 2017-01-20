@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Ocorrencias</title>
+    <link rel="stylesheet" href="icons/material.css">
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+</head>
+<body>
+	
+    <div class="verde accent-4 valign-wrapper">
+    	<h5 class="titulo">Ocorrências</h5>
+    	<i class="material-icons waves-effect waves-ligth waves-circle">more_vert</i>
+    </div>
+
+    <div class="row">
+    <form class="col s12">
+    	<p class="col s6">
+    		<input class="with-gap" name="group3" type="radio" id="test5" checked />
+    		<label for="test5">Transire</label>
+    	</p>
+    	<p class="col s6">
+    		<input class="with-gap" name="group3" type="radio" id="test6"/>
+    		<label for="test6">Terceiro</label>
+    	</p>
+      <div class="row">
+        <div class="input-field col s6">
+          <input id="matricula" type="text" class="validate">
+          <label for="matricula">Matricula</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12">
+          <input id="last_name" type="text" class="validate">
+          <label for="last_name">Nome do funcionário</label>
+        </div>
+      </div>
+      
+      <div class="row">
+      	<form class="col s12">
+      		<div class="row">
+      			<div class="input-field col s12">
+      				<textarea id="textarea1" class="materialize-textarea"></textarea>
+      				<label for="textarea1">Motivo da ocorrência</label>
+      			</div>
+      		</div>
+      	</form>
+      </div>
+      
+      <div class="row">
+        <div class="input-field col s12">
+          <input id="registrado" type="text" class="validate">
+          <label for="registrado">Registrado por</label>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <button class="verde footer btn waves-effect btn-large" type="submit" name="action" style="width: 100%;">Enviar dados
+    <i class="material-icons right">send</i>
+  </button>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/materialize.min.js"></script>
+</body>
+</html>
