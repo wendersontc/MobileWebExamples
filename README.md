@@ -1,1 +1,1 @@
-# MobileWebExamples
+# Aplicativos exemplos que foram desenvolvidos usando cordova 
