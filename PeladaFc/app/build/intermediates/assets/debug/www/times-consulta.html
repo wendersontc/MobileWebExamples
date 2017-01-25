@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+
+        <script type="text/javascript" src="js/jquery.js" ></script>
+
+        <script>
+            function fc_show_hide_menu() {
+                var bool = null;
+                bool = $('#showHideMenu').is(':visible');
+                if (!bool) {
+                    $('#showHideMenu').show(5);
+                } else {
+                    $('#showHideMenu').hide(5);
+                }
+            }
+        </script>
+
+    </head>
+    <body>
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/times.png" class="logo-interna" alt="logo" width="55" height="60"/>
+                <span class="titulo-interna"> TIMES </span>
+                <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="times-selecionado">
+                <img src="img/escudos/flamengo.png" />
+                <div> Flamengo </div>
+            </div>
+
+            <div id="menu-tela-times">
+                <a href="consulta-jogadores.html"> 
+                    <div class="item-menu-times">
+                        <img src="img/ic-menu/jogadores.png" width="50" height="50" class="item-menu-times-img" />
+                        <span class="item-menu-times-span">Jogadores</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+
+                <a href="consulta-jogos.html"> 
+                    <div class="item-menu-times">
+                        <img src="img/ic-menu/jogos.png" width="50" height="50" class="item-menu-times-img"  />
+                        <span class="item-menu-times-span">Jogos</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+
+                <a href="consulta-eventos.html"> 
+                    <div class="item-menu-times">
+                        <img src="img/ic-menu/eventos.png" width="50" height="50" class="item-menu-times-img"  />
+                        <span class="item-menu-times-span"> Eventos</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" width="41"  style="margin: 13px 0px 0px 0px" />
+            <img src="img/ic-rodape-fixo/pesquisar.png" style="float: right; margin: 13px 10px 0px 0px" />
+        </footer>
+
+
+
+        <!-- MENU GERAL IMPORT -->
+        <div id="showHideMenu" style="display: none"> 
+            <div id="escurecer">
+            </div>
+            <div id="menu-geral">
+                <ul id="lista-menu-geral">
+                    <li> <img src="img/ic-menu/geral/evento.png" style="float: left; margin: 0px 5px 0px 5px;" />  <span class="text-lista-geral"> Criar Evento </span>  <div class="clear"> </div> </li>
+                    <li> <img src="img/ic-menu/geral/editar.png" style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Editar </span> <div class="clear"> </div></li>
+                    <li> <img src="img/ic-menu/geral/foto.png" style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Inserir Foto </span> <div class="clear"> </div> </li>
+                    <li> <img src="img/ic-menu/geral/excluir.png" style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Apagar </span> <div class="clear"> </div></li>
+                </ul>
+            </div>
+        </div>
+        <!-- MENU GERAL IMPORT -->
+
+
+
+    </body>
+</html>

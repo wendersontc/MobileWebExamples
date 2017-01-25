@@ -1,0 +1,218 @@
+/**@media screen and (min-device-width: 480px) and (max-device-width: 719px) {**/
+*{
+	margin: 0px;
+	padding: 0px;	
+}
+
+body{
+    width: 100%;
+    height: 100%;
+    
+    background-image: url('../img/background-menu.png');
+    background-size: cover;
+    
+    position: relative;
+    top: 0;
+    left: 0;
+    
+    margin: 0px;
+    padding: 0px;
+    
+    font-family: Arial, Tahoma;
+}
+
+.clear{
+    clear: both;
+}
+
+#menu-topo1{
+    width: 100%;
+    height: 60px;
+    
+    background-image: url('../img/barra-topo.png');
+    background-size: cover;
+}
+
+.logo-interna{
+	width: 40px;
+	height: 40px;
+	
+    float: left;
+    margin-top: 7px;
+    margin-left: 10px;
+}
+
+.titulo-interna{
+    float: left;
+    margin-top: 20px;
+    margin-left: 15px;
+    
+    font-size: 20px;
+    color: #fff;
+}
+
+#menu-topo2{
+    width: 100%;
+    height: 60px;
+    
+    background-image: url('../img/barra-topo2.png');
+    background-size: cover;
+    
+    text-align: center;
+ 
+}
+
+#text-titulo-evento{
+	width: 100%;
+	text-align: center;
+	
+    font-size: 16px;
+    color: #fff;
+    
+    
+    float: left;
+    margin-top:10px;
+    
+    clear: both;
+}
+
+#text-titulo-evento-dado{
+	width: 100%;
+	text-align: center;
+	
+    font-size: 24px;
+    color: #fff;
+    float: left;
+}
+
+#container-ic-menus{
+    width: 95%;
+    height: 220px;
+    
+    margin: 0px auto;
+    
+    background: transparent;
+    
+    font-size: 20px;
+    color: #fff;
+    
+    margin-top: 50px;
+}
+
+.imagens-menu{
+	width: 52px;
+	height: 51px;
+	margin-top: 15px;
+}
+
+#ic-jogos{
+    width: 49%;
+    height: 100px;
+    
+    background: transparent;
+    
+    float: left;
+    text-align: center;
+    
+}
+
+#ic-eventos{
+    width: 48%;
+    height: 100px;
+    
+    background: transparent;
+    
+    float: right;
+    text-align: center;
+    
+}
+
+#ic-times{
+    width: 49%;
+    height: 100px;
+    
+    background: transparent;
+    
+    float: left;
+    text-align: center;
+}
+
+#ic-estatisticas{
+    width: 48%;
+    height: 100px;
+    
+    background: transparent;
+    
+    float: right;
+    text-align: center;
+}
+
+.rodape-fixo{
+    width: 100%;
+    height: 60px;
+    
+    background-image: url('../img/barra-bottom.png');
+    background-size: cover;
+    
+    position: fixed;
+    bottom: 0px;
+    
+    text-align: center;
+}
+
+.imagens-rodapev{
+	width: 50px;
+	height: 40px;
+}
+.imagens-rodapeh{
+	width: 40px;
+	height: 40px;
+}
+.imagens-rodapep{
+	width: 40px;
+	height: 40px;
+}
+.imagens-rodapej{
+	width: 40px;
+	height: 40px;
+}
+
+/**}**/
+
+
+#menu-geral{
+    width: 80%;
+    min-height: 200px;
+
+    background: #004B15;
+
+    position: absolute;
+    top: 60px; 
+    right: 0px;
+
+    color: #fff;
+}
+#lista-menu-geral{
+    width: 100%;
+    height: auto;
+
+    list-style: none;
+
+    margin: 0px;
+    padding: 0px;
+}
+
+#lista-menu-geral li{
+    font-size: 22px;
+    color: #fff;
+
+    padding: 7px 0px 7px 0px;
+    border-bottom: 1px solid #fff;
+
+}
+
+
+
+#lista-menu-geral li:last-child{
+    border:0;
+}

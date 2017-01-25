@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        
+        <script type="text/javascript" src="cordova.js"></script>
+        
+        <script type="text/javascript" src="js/jquery.js" ></script>
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+        
+        <script>
+	        var db = null;
+	      
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+            var vid = sessionStorage.getItem('vId');
+            var vcodtim = 0;
+	        function onLoad() {
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    		
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		
+	    		db.transaction(fc_carrega, errorCB);
+	    		fc_lista_jogadores();
+	    		
+	    	}
+	    	function fc_carrega(tx){
+	    		
+	    		tx.executeSql('select * from tbl_time  order by destim', [], sucessCarregaTime, errorCB);
+	    		
+	    	
+	    	}
+	    	
+	    	function sucessCarregaTime(tx, results){	    		
+	    		var htm = '<option value="0">Jogadores do evento</option>';
+	    		 
+	    		for(var i =0; i< results.rows.length; i++){
+	    			htm += '<option value="'+ results.rows.item(i).codtim +'">' + results.rows.item(i).destim + '</option>';
+	    		}
+	    		htm += ' <option value="-1">Todos os Jogadores</option>';
+	    		$('#carrega_time').html(htm);
+
+	    	}
+	    	
+	    	
+	    	function fc_lista_jogadores(){
+	    		
+	    		db.transaction(faz_lista_jogadores, errorCB);
+	    	}
+	    	
+	    	
+	    	function faz_lista_jogadores(tx){
+	    		
+	    		var sql = 'select a.*, b.destim, c.despos, f.deseve, ' +
+	    		' (select count(*) from tbl_jogos_vermelho v ' +
+	    	    ' where v.codeve='+ vcodeve + ' and v.id_jogo<=' + vid + ' and v.aberto=1 and a.codjog=v.codjog) as suspenso  ' +
+	    		' from  tbl_jogador a ' +
+	    		' left join tbl_posicao c      on a.codpos = c.codpos ' +
+	    		' left join tbl_jogador_time e on a.codjog = e.codjog ' +
+	    		' left join tbl_time    b      on e.codtim = b.codtim ' +
+	    		' left join tbl_evento  f      on e.codeve = f.codeve ' ;
+	    	
+	    	    vcodtim = $('#carrega_time').val();
+	    	    
+	    		if (vcodtim!=-1){
+	    			sql += ' where e.codeve = ' + vcodeve;	    			
+	    		} else {	    			
+	    			sql += ' where 1 = 1 ';
+	    	    }
+	    		
+	    		if (vcodtim>0){
+	    			sql += ' and e.codtim= ' + vcodtim;
+	    		}
+	    		
+	    		sql += ' order by a.desjog  ';
+	    		
+	    	///alert(sql);
+	    		tx.executeSql(sql, [], successLista, errorCB);
+	    	}
+	    	
+	    	function successLista(tx, results){
+	    		var idev ='';
+	    		var qtd_linhas = results.rows.length;
+	    		var nome_jog = '', posicao = '', time = '', fone = '', path_img = '';
+	    		var htm = '';
+	    		
+	    		if (qtd_linhas==0) {
+	    			htm +=  "<li><span class='lista-time-tit'>Não existe jogadores viculado ao time atualmente</span></li>";
+	    			htm +=  "<li><span class='lista-time-tit'>Evento de onde deseja copiar:</span></li>";
+	    			htm += "<li>";
+	    			htm += ' <select id="carrega_evento"  class="carrega-select" >    </select>';
+	    			htm += "</li>";	    			
+	    			htm += "<li>";	    			
+	    			htm +=  "<span class='lista-time-tit'>Escolha um evento anterior de onde deseja fazer uma cópia </span>";
+	    			
+	    			htm +=  "<span onclick='fc_executa_copia()' class='lista-time-tit'>click aqui para executar a copia</span>";
+	    			htm += "</li>";
+	    			" <div class='clear'></div> </li>";
+	    		} else {	
+	    		
+	    		for(var i=0; i< qtd_linhas; i++){
+	    			
+	    			nome_jog = results.rows.item(i).desjog;
+	    			posicao = results.rows.item(i).despos;
+	    			time = results.rows.item(i).destim;
+	    			fone = results.rows.item(i).telefone;
+	    			path_img = results.rows.item(i).codjog;
+	    			idev = results.rows.item(i).codjog;
+	    			
+	    		    htm += '<div class="lista-jogadores" > ';
+	    		    htm += '<div  onclick="fc_getPhoto('+idev+')" class="lista-jg-img"> <img src="file:///mnt/sdcard/peladaFC/jog_'+idev+'.jpg" width="80" height="80"  /> </div>' ;
+	    		    if (results.rows.item(i).suspenso!=0){
+	    		        htm += '<div class="cadastro-cartao-vermelho-jogador inclinar"></div>';
+	    		    }
+	    		    htm += '<div class="lista-jg-nome" >'+ nome_jog  +'</div> ';
+	    		    htm += '<div class="lista-jg-posicao"> '+posicao+' Nr.'+ results.rows.item(i).nro + '</div> ';
+	    		    if (vcodtim==-1) {
+	    		    	htm += '<div onclick="fc_cadastro_jogador_time('+idev+')" class="lista-jg-time"> <u>'+time+'(' +results.rows.item(i).deseve + ') </u></div> ';
+	    		    }else{
+	    		    	htm += '<div onclick="fc_cadastro_jogador_time('+idev+')" class="lista-jg-time"> <u>'+time+' </u></div> ';	
+	    		    }
+	    		    
+	    		    htm += '<div class="lista-jg-tel"><a href="tel:'+fone+'"> <img src="img/ic_telefone.png" width="25" height="25" /> </a></div> ';
+	    		    htm += "<img src='img/editar.jpg' onclick='fc_editar_evento("+idev+")' class='imagem_editar2' alt='logo' width='25' height='25'/>";
+	    		    htm += '</div>';
+	    	
+	    		
+	    		}
+	    		//alert(htm);
+	    		htm += ' <div class="clear"> </div><br/><br/>';
+	    		}
+	    		
+	    		
+	    		$('#container-ic-interna-cadastro-jogador').html(htm);
+	    		if (qtd_linhas==0) {
+		    		   db.transaction(fc_carrega_jog, errorCB);
+		    	}
+	    	}
+	    	
+	    	function fc_cadastro_jogador_time(id){
+	    		sessionStorage.setItem('vId', id);
+	    		fc_link('cadastro-jogador-time.html');	
+	    	}
+	    	
+	    	function fc_carrega_jog(tx) {            	
+                tx.executeSql('select * from tbl_evento where codeve<>' +vcodeve+ ' order by deseve', [], sucessCarregaEvento, errorCB);                
+            }
+            function sucessCarregaEvento(tx, results) {
+                var htm = '';
+                for (var i = 0; i < results.rows.length; i++) {
+                    htm += '<option value="' + results.rows.item(i).codeve + '">' + results.rows.item(i).deseve + '</option>';
+                }
+                $('#carrega_evento').html(htm);
+            }
+            
+            var vsql='';
+            
+            function fc_executa_copia(){                
+            	db.transaction(faz_executa_copia, ErroSalvar_copia);
+            }
+            function faz_executa_copia(tx){
+            	var veveant = $('#carrega_evento').val();
+	    		var sql = 'select distinct codjog, codtim from tbl_jogador_time where codeve='+veveant+'  order by codjog  '; 
+	    		tx.executeSql(sql, [], successExecuta_copia, ErroSalvar_copia);
+	    	}
+            
+            function successExecuta_copia(tx, results) {
+            	ShowHideLoad('true');
+                var sql = '';
+                for (var i = 0; i < results.rows.length; i++) {                    
+                    
+                    sql = "insert into tbl_jogador_time(codjog, codtim, codeve, grutel)" + 
+          		  " values ("+results.rows.item(i).codjog+", "+results.rows.item(i).codtim+","+vcodeve+"," + vgrutel+ ")";
+          	       vsql+=sql;
+          	       console.log(sql);
+                    tx.executeSql(sql);
+                    console.log('ok');
+                    
+                }
+                
+                fc_link('consulta-jogadores.html'); 
+                               
+            }
+            
+            
+            function ErroSalvar_copia() {
+            	 alert(vsql);
+            }
+	    	
+
+	    	
+	    	function fc_editar_evento(idev){
+	    		sessionStorage.setItem('vId', idev);
+	    		fc_link('cadastro-jogador.html');
+	    	}
+	    	
+	    	
+	    	/***
+	    	** SCRIPT PARA ESCOLHER FOTO NO TELEFONE
+	    	**/
+	    	
+	    	function getPhoto(srcs){
+		    	//this.photoDestinationType=navigator.camera.DestinationType;
+				//var source =  navigator.camera.PictureSourceType.PHOTOLIBRARY;
+											   //SAVEDPHOTOALBUM, PHOTOLIBRARY, CAMERA, ALL;
+				
+		    	navigator.camera.getPicture(successFn, errorFn, { quality: 50,
+			        destinationType:  Camera.DestinationType.FILE_URI,
+			        sourceType: srcs,
+			        mediaType: navigator.camera.MediaType.PICTURE  });
+		    }
+		    
+		    function errorFn(message) {
+		        console.log('Failed because: ' + message);
+		      }
+		    
+		    
+		    function successFn(imageData) {
+		       //alert(imageData);
+		       //var image = document.getElementById('imgg');
+		       //image.src = "data:image/jpeg;base64," + imageData;
+		       
+		       var gotFileEntry = function(fileEntry) {
+		           //alert("got image file entry: " + fileEntry.fullPath);
+		           var gotFileSystem = function(fileSystem) {
+
+		               fileSystem.root.getDirectory("PeladaFC", {
+		                   create : true
+		               }, function(dataDir) {
+		                   // copy the file
+		                   fileEntry.copyTo(dataDir, "jog_" + sessionStorage.getItem("codJogAtual") + ".jpg" , null, fsFail);
+							alert("jog_" + sessionStorage.getItem("codJogAtual") + ".jpg");
+		               }, dirFail);
+		               
+
+		           };
+		           // get file system to copy or move image file to
+		           window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, gotFileSystem,
+		                   fsFail);
+		       };
+		       // resolve file system for image
+		       window.resolveLocalFileSystemURI(imageData, gotFileEntry, fsFail);
+
+		       // file system fail
+		       var fsFail = function(error) {
+		           console.log("Erro pq o usuario: " + error.code);
+
+		       };
+
+		       var dirFail = function(error) {
+		           console.log("Erro de diretorio cod: " + error.code);
+
+		       };
+		       
+		      }
+	    	
+	    	
+	    	function fc_getPhoto(idjog){
+	    		//alert('getPhoto');
+	    		sessionStorage.setItem('codJogAtual', idjog);
+	    		getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY);
+	    	}
+	    	
+	    	
+	    	/***
+	    	** FIM SCRIPT PARA ESCOLHER FOTO NO TELEFONE
+	    	**/
+        </script>
+        
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/jogadores.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> JOGADORES </span>
+                <!--  <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+            	<span class="adicionar" onclick="fc_editar_evento('null')" > + </span>
+            </div>
+            <div id="id-filtro-consulta-jogadores" style="z-index:95; float:left; position: fixed; background:#fff; width: 100%;padding: 0px; margin: 60px 0px 0px 0px;">
+        
+             <table class="tbl-filtro-consulta-jogadores" style="float:left;width: 100%;">
+                <tr  style="width: 100%;">
+                 <td><select id="carrega_time" class="carrega-select"  onchange="fc_lista_jogadores()" >
+                  </select> </td>
+                 
+                 </tr>     
+            </table>
+            </div>
+        </header> 
+        <div id="container-ic-interna-cadastro-jogador">
+      <!-- 
+             <div class="lista-jogadores" >
+                <div  onclick="fc_getPhoto('idev')" class="lista-jg-img"> <img src="img/padrao.png" width="80" height="80" /> </div>
+                <div class="lista-jg-nome" >  Nome do Jogador  </div> 
+                <div class="lista-jg-posicao"> Posicao </div> 
+                <div class="lista-jg-time"> Nome do time </div>
+                <div class="lista-jg-tel"> <img src="img/ic_telefone.png" width="40" height="40" /> </div>
+                <img src='img/editar.jpg' onclick='fc_editar_evento("idev")' class='imagem_editar'  alt='logo' width='25' height='25'/>
+            </div>  
+            
+                         
+            <div class="clear"> </div>
+            <br/>
+            <br/>
+            <br/> 
+             -->   
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+        
+                  <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+        
+    </body>
+</html>

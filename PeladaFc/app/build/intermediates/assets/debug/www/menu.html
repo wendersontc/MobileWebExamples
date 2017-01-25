@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    
+     
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <script type="text/javascript" src="cordova.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/style-menu.css" />
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+        <script type="text/javascript" src="js/jquery.js" ></script>
+        
+        <script>
+        
+	        var db = null;
+	        var vNomeGrupo = '';
+	        var vgrutel =  0;
+	        var vcodeve =  0;
+	        var vdeseve = '';
+    		var vSenha     = '';
+    		var vSenha2    = '';
+    		var vEmail     = '';
+    		var vTel       = '';
+    		var vAtt	   = 0;
+    		var vid	   = 0;
+    		
+	        
+	        sessionStorage.setItem('vCons', 0);
+	    	function onLoad() {
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		
+	    		vcodeve    = localStorage.getItem('codeve');    		
+	    		
+	    		if (vcodeve=='null' || vcodeve==null){	   
+	    			//fc_link_consulta('eventos.html');
+	    			alert("Crie um evento ou selecionar para iniciar o aplicativo !")
+	    			 	
+	    		}
+	    		vgrutel    = localStorage.getItem('grutel');
+	    		if (vgrutel=='null' || vgrutel==null){	   
+	    			vgrutel=0;	    
+	    			 	
+	    		}
+	    		
+	    		vdeseve    = localStorage.getItem('deseve');
+	    		$('#text-titulo-evento-dado').text(vdeseve);
+	    		
+	    		if(vgrutel!=0){	    			
+                    $('#li-envia-cadastro').show(5);
+                    $('#li-envia-movimento').show(5);
+                    $('#li-envia-fotos').show(5);
+                    $('#li-recebe-fotos').show(5);
+                
+	    		
+	    		
+	    			
+	    			vNomeGrupo = localStorage.getItem('nomegrupo');
+	    			vSenha     = localStorage.getItem('senha');	
+	    			vSenha2    = localStorage.getItem('senha2');	
+	    			vEmail     = localStorage.getItem('email');
+	    			vTel       = localStorage.getItem('tel');
+	    			vAtt	   = localStorage.getItem('att');
+	    			
+	    		}
+	    		db.transaction(fc_carrega_id, errorCB);	
+	    	//	alert(vgrutel);
+	    		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemSuccess, fail);
+	    	}
+	    	
+	    	function onFileSystemSuccess(fileSystem) {
+	    	    fileSystem.root.getDirectory("PeladaFC", {create: false, exclusive: false}, getDirSuccess, fail);
+	    	}
+
+	    	function getDirSuccess(dirEntry) {
+	    	//	alert('Entrou ->  getDirSuccess' );
+	    	    // Get a directory reader
+	    	    //alert(dirEntry.fullPath);
+	    	    var directoryReader = dirEntry.createReader();
+
+	    	    // Get a list of all the entries in the directory
+	    	    directoryReader.readEntries(readerSuccess,fail);
+	    	}
+
+	    	function readerSuccess(entries) {
+	    		//alert('Entrou ->  readerSuccess' );
+	    	    var i;
+	    	    var SetVetorImgs = new Array();
+	    	    //alert('Entries length -> '+entries.length);
+	    	    for (i=0; i<entries.length; i++) {
+	    	    	//alert(entries[i].name);
+	    	    	if(entries[i].isFile){
+	    	    		SetVetorImgs.push("'"+entries[i].name+"'");
+	    	    	}
+	    	    }
+	    	    
+	    	    sessionStorage.setItem('vetorNomeImagens', SetVetorImgs);
+	    	    //alert(SetVetorImgs);
+	    	}
+	    	
+	    	
+		    var indice = 0;
+		   
+		    function uploadAllImages(){
+		    	var allImg = eval('['+sessionStorage.getItem('vetorNomeImagens')+']');
+		    	//alert('['+sessionStorage.getItem('vetorNomeImagens')+']');
+		    	//alert('['+sessionStorage.getItem('vetorNomeImagens')+']');
+		    //	alert('AllImge -> ' + eval(allImg) );
+		    	//alert(allImg[indice]);
+		    	ShowHideConfig('#hProgress');
+		    	$('#upLoadProgress').attr('max', allImg.length);
+		    	uploadPhoto(allImg[indice]);
+		    }
+		    
+		    
+		    function uploadPhoto(idImg) {
+		    	
+	        	//alert('Image URI' + idImg);
+	        	var pathImg = "file:///mnt/sdcard/PeladaFC/"+idImg;
+	        	//alert(pathImg);
+	            var options = new FileUploadOptions();
+	            options.fileKey="file";
+	            options.fileName=pathImg.substr(pathImg.lastIndexOf('/')+1);
+	            options.mimeType="image/jpeg";
+	 
+	           
+	            var params = new Object();
+	            params.value1 = vgrutel;
+	                     
+	            options.params = params;
+	            options.chunkedMode = false;
+	            
+	 
+	          
+	            var ft = new FileTransfer();
+	            var javaUrl = pathWS + 'upload';
+	          //  alert(javaUrl);
+	            //var pathImg = "content://media/external/images/media/"+idImg;
+	          //  alert(pathImg);
+	            
+	            ft.upload(pathImg, javaUrl, win, fail, options);
+	            //ft.upload(imageURI, javaUrl, win, fail, options);
+	        }
+	 
+	        function win(r) {
+	            console.log("Code = " + r.responseCode);
+	            console.log("Response = " + r.response);
+	            console.log("Sent = " + r.bytesSent);
+	            console.log(r.response);
+	            
+	            indice++;
+	            $('#upLoadProgress').attr('value', indice);
+	            var cb_allImg = eval('['+sessionStorage.getItem('vetorNomeImagens')+']');
+	            var idImg = cb_allImg[indice];
+	            //alert(cb_allImg.length);
+	            if(cb_allImg.length > indice){
+	            	uploadPhoto(cb_allImg[indice]);
+	            	//alert('if'+indice);
+	            }else{
+	            	//alert('else'+indice);
+	            	alert('Imagens enviadas com sucesso!');
+	            	ShowHideConfig('#hProgress');
+	            	indice=0;
+	           	 	$('#upLoadProgress').attr('value', indice);
+	            }            
+	        }
+	 
+	        function fail(error) {
+	            alert("Erro ao comunicar com o servidor!, tente em um minuto: Code = " = error.code);
+	        }
+	        
+	    	
+           function fc_carrega_id(tx){
+        	 
+	    		tx.executeSql('select id_jogo from tbl_jogos where codeve=' + vcodeve+ ' and encerrado=1 order by id_jogo desc limit 1 ', [], sucessCarregaid, errorCB);
+	    		
+	    	
+	    	}
+	    	
+	    	function sucessCarregaid(tx, results){	    		
+	    		vid=0;
+	    		
+	    		for(var i =0; i< results.rows.length; i++){
+	    			vid = results.rows.item(i).id_jogo;
+	    		}
+	    		
+	    		sessionStorage.setItem('vId', vid);
+	    		
+	    		
+	    	}
+	    	
+	    	
+	    	 function fc_show_hide_menu(){
+	                var bool = null;
+	                bool = $('#showHideMenu').is(':visible');
+	                if(! bool){
+	                    $('#showHideMenu').show(5);
+	                }else{
+	                    $('#showHideMenu').hide(5);
+	                }
+	            }
+	   
+	    function fc_envcadastro(){
+	    	fc_show_hide_menu();
+	    	fc_envia_cadastro();
+	    	
+	    }
+
+	    function fc_envmovimento(){
+	    	fc_show_hide_menu();
+	    	fc_envia_movimento();
+	    	
+	    }
+	  
+	    
+	    
+	    
+
+    	var listaImgDownload = null;
+        var objListaDownload = null;
+        function generateListImageDownload(){
+        	var callbackDone = function(data) {
+    		 	if(data != null && data != 'null'){
+    		 		sessionStorage.setItem('vetorImagemDownload', data);
+    		 		//alert(sessionStorage.getItem('vetorImagemDownload'));
+    		 		objListaDownload = eval('[' + sessionStorage.getItem('vetorImagemDownload') +']');
+    		 		
+	    			$('#upLoadProgress').attr('max', objListaDownload.length);
+    		 		DownloadAllImages();
+    		 	}
+    		 };
+    		 var callbackFail = function(err) {
+    			 alert('Erro ao tentar conectar com o servidor! por favor, tente em um minuto.');
+    			 ShowHideConfig('#hProgress');
+    		 };
+    		
+    		 ShowHideConfig('#hProgress');
+    		 var json = {"grupo": vgrutel , "senha": vSenha}; 
+    		 comunicaWS("hashImage", json, "POST", callbackDone, callbackFail);
+        }
+        
+        var indiceDownload = 0;
+        var idImageDownload = null;
+        function DownloadAllImages(){
+        	//alert('entrou DownloadAllImages');
+        	idImageDownload = objListaDownload[indiceDownload];
+        	//alert('Id img download -> ' + idImageDownload);
+        	
+        	var downloadUrl = localStorage.getItem('PathServidorImagem') + vgrutel +"/" + idImageDownload;
+        	var pathImg = "file:///mnt/sdcard/PeladaFC/" + idImageDownload; 
+        	//alert(downloadUrl);
+        	
+        	   var fileTransfer = new FileTransfer();
+        	   fileTransfer.download(
+        	      downloadUrl,
+        	      pathImg,
+        	      function (entry) {
+        	         //alert("Success");
+        	         if(eval(objListaDownload.length -1) > indiceDownload){
+        	         	indiceDownload++;
+        	         	$('#upLoadProgress').attr('value', indiceDownload);
+        	         	DownloadAllImages();
+        	         }else{
+        	        	 alert('Download das imagens concluidos com sucesso!');
+        	             ShowHideConfig('#hProgress');
+        	             indiceDownload=0;
+        	           	 $('#upLoadProgress').attr('value', indiceDownload);
+        	         }
+        	      },
+        	      function (error) {
+        	         alert("Erro durante o download. Code = " + error.code);
+        	      }
+        	   );
+        	
+        }
+        
+
+	    
+	    
+	    
+        </script>
+        
+    </head>
+    <body  onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/logo-interna.png" class="logo-interna" alt="logo"/>
+                <span class="titulo-interna"> PeladaFC </span>
+                <img src="img/propriedade-menu.png" style="float: right;margin: 13px 0px 0px 0px;" width="35" height="30" id="propriedade-menu" onclick="fc_show_hide_menu()" />
+            </div>
+            <div id="menu-topo2" >
+                <span id="text-titulo-evento" > EVENTO ATUAL:</span> 
+                <br/>
+                <span id="text-titulo-evento-dado" onclick="fc_link_consulta('eventos.html')">Click Aqui Para Selecionar Evento</span>
+            </div>
+            
+        </header>
+      
+        <div id="container-ic-menus" >
+        
+            <div id="ic-jogos" onclick="fc_link('jogos.html')">
+                <img src="img/ic-menu/jogos.png" class="imagens-menu" /> <br/>
+                JOGOS
+                <div class="clear"></div>
+                <div style="width: 95%; height: 4px; float: left; background: #fff; opacity: .20"> </div>
+            </div>
+
+            <div style="width: 4px; height: 81px; float: left;  margin-left: 1%; background: #fff; opacity: .20"> </div>
+
+            <div id="ic-eventos" onclick="fc_link_consulta('eventos.html')">
+                <img src="img/ic-menu/eventos.png" class="imagens-menu" /> <br/>
+                EVENTOS
+                <div class="clear"></div>
+                <div style="width: 95%; height: 4px; float: right; background: #fff; opacity: .20"> </div>
+            </div>
+
+            <div id="ic-times" onclick="fc_link('times.html')">
+                <img src="img/ic-menu/times.png" class="imagens-menu" /> <br/>
+                TIMES
+            </div>
+            
+            <div style="width: 4px; height: 81px; float: left;  margin-left: 1%; margin-top: 4%; background: #fff; opacity: .20"> </div>
+           
+            <div id="ic-estatisticas" onclick="fc_link('estatisticas.html')">
+                <img src="img/ic-menu/estatistica.png" class="imagens-menu" /> <br/>
+                ESTAT&Iacute;STICAS
+            </div>
+            
+            
+            <div style="clear: both;"></div>
+            <br/><br/>
+        </div>
+        <br/>
+        
+      <!--    <div class="padrao-btn" onclick="fc_link('lista_tudo.html')"	 style="margin-bottom: 130px;"> lista tudo </div>
+        -->
+        
+        
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png"    class="imagens-rodapev"  style="float: left; margin: 10px 0px 0px 10px;" onclick="fc_link_back()" />
+            <!-- <img src="img/ic-rodape-fixo/inicio.png"    class="imagens-rodape"  style="margin: 13px 0px 0px 0px" />  -->
+            <img src="img/ic-rodape-fixo/contatos.png"  class="imagens-rodapej"  style="float: right; margin: 13px 10px 0px 0px" onclick="fc_link('consulta-jogadores.html')"/>
+        </footer>
+        
+        
+         <!-- MENU GERAL IMPORT -->
+        <div id="showHideMenu" style="display: none"> 
+            <div id="escurecer">
+            </div>
+            <div id="menu-geral">
+                <ul id="lista-menu-geral">
+                    <li onclick="fc_link('localjogo.html')"> <img src="img/ic-menu/geral/evento.png"  style="float: left; margin: 0px 5px 0px 5px;" />  <span class="text-lista-geral"> Local Jogo </span>  <div class="clear"> </div> </li>
+                    <li onclick="fc_link('juiz.html')"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Juiz </span> <div class="clear"> </div></li>
+                    <li onclick="fc_link('posicao.html')"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Posição Jogo </span> <div class="clear"> </div></li>
+                    <li onclick="fc_link('cadastro-grupo.html')"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Cad.Grupo </span> <div class="clear"> </div></li>
+                    <li id="li-envia-cadastro" onclick="fc_envcadastro()" style="display: none"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Enviar Cadastro </span> <div class="clear"> </div></li>
+                    <li id="li-envia-movimento" onclick="fc_envmovimento()" style="display: none"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral">Enviar Jogos </span> <div class="clear"> </div></li>
+                    <li id="li-envia-fotos" onclick="uploadAllImages()" style="display: none"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral">Enviar Fotos </span> <div class="clear"> </div></li>
+                    <li id="li-recebe-fotos" onclick="generateListImageDownload()" style="display: none"> <img src="img/ic-menu/geral/editar.png"  style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral">Baixar Fotos </span> <div class="clear"> </div></li>                    
+                </ul>
+            </div>
+        </div>
+        <!-- MENU GERAL IMPORT -->
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+        <!-- PROGRESS BAR -->
+		<div id="hProgress" style="width: 100%; height: 100%; display: none; background: rgb(0,0,0); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+			 <br/>
+			 <span style="color: #fff"> Progresso: </span> 
+			 <div style="width: 100%; margin: 0px; padding: 0px; border: 1px solid #fff; background: transparent;]">
+				 <progress id="upLoadProgress" style="width: 100%;">
+				 </progress>
+			 </div>
+			 <div class="clear"></div>
+		</div>
+		
+    </body>
+</html>

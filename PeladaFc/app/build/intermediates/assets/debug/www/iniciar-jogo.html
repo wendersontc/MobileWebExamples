@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/jquery.js" ></script>       
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+
+
+         <script>
+            var db = null;
+            
+            sessionStorage.setItem('vtempo', null);
+            sessionStorage.setItem('vtempo_min', null);
+            sessionStorage.setItem('vcronometro', null);
+       	    sessionStorage.setItem('vcronometro_real', null);
+       	    sessionStorage.setItem('tempo_cartao_azul', null);
+       	    sessionStorage.setItem('veditar', 0);
+            
+            var vid = sessionStorage.getItem('vId');
+    
+            var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+           
+            function onLoad() {
+                document.addEventListener("deviceready", onDeviceReady, false);
+            }
+
+            function onDeviceReady() {
+                db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+                  
+                db.transaction(editarEditarJogos, errorCB);
+                
+            }
+            
+            function editarEditarJogos(tx){
+            	
+            	var sql = 'select a.*, l.desloc, t1.destim as time1, t2.destim as time2, t1.sigla as sigla1, t2.sigla as sigla2, ' +  
+	    		' e.hora_inicial as e_hr_inicial, e.hora_inicial as e_hr_final, e.primeiro_tempo_min, e.interval_min,e.segundo_tempo_min, ' +
+	    		' e.pontos_vitoria, e.pontos_empate,e.tempo_cartao_azul,e.comentario_tela_inicio, e.comentario_tela_final, ' +
+	    		' j.desjuiz ' +
+	    		' from tbl_jogos a  inner join tbl_time t1 on a.codtim1 = t1.codtim ' +
+	    		' inner join tbl_time t2 on a.codtim2 = t2.codtim ' +
+	    		' inner join tbl_evento e on a.codeve = e.codeve ' +
+	    		' left join  tbl_local l on a.codloc  = l.codloc ' +
+	    		' left join  tbl_juiz j on a.codjuiz  = j.codjuiz ' +
+	    		' where a.codeve=' + vcodeve + 
+	    		' and a.id_jogo='+ vid  ;
+	    	    	
+	    		tx.executeSql(sql, [], successEditarJogos, errorIniciarJogos);
+	    	}
+        	
+	    	function successEditarJogos(tx, results){
+	    		$('#codtime1').attr('src', 'file:///mnt/sdcard/peladaFC/time_'+results.rows.item(0).codtim1 + '.jpg');
+	    		$('#codtime2').attr('src', 'file:///mnt/sdcard/peladaFC/time_'+results.rows.item(0).codtim2 + '.jpg');
+	    		
+	    		sessionStorage.setItem('tempo_cartao_azul', results.rows.item(0).tempo_cartao_azul);
+	    		
+	    		
+	    		
+	    		 //$('#iniciar-jogos-evento').text(vdeseve);
+	    		 $('#time1').text(results.rows.item(0).sigla1);
+            	 $('#time2').text(results.rows.item(0).sigla2);
+            	 $('#hora_inicial').text(results.rows.item(0).hora_inicial);
+            	 $('#desloc').text(results.rows.item(0).desloc);
+            	 $('#desjuiz').text(results.rows.item(0).desjuiz);
+            	 if (results.rows.item(0).encerrado ==1){
+            		 sessionStorage.setItem('vId', vid);
+            		 sessionStorage.setItem('vorigem', 'iniciar');
+     	    	 	 fc_link('fim-jogo.html');
+     	    		
+            	 } else	 {
+            	 	if (results.rows.item(0).primeiro_encerrado !=1){ 
+            	 		
+            	 		
+            	 		
+            		 	$('#iniciar-jogo').text('INICIAR 1º.TEMPO:'+results.rows.item(0).primeiro_tempo_min + ' min');
+                	 	$('#comentario').text(results.rows.item(0).comentario_tela_inicio);	 
+            		 
+	                	 sessionStorage.setItem('vtempo', 1);
+                	
+    	            	 sessionStorage.setItem('vtempo_min', results.rows.item(0).primeiro_tempo_min );
+        	        	 sessionStorage.setItem('vcronometro', results.rows.item(0).primeiro_tempo);
+            	    	 sessionStorage.setItem('vcronometro_real', results.rows.item(0).primeiro_tempo_real);
+                	 
+            		 } else {
+            	   		if (results.rows.item(0).intervalo_encerrado !=1){
+            		   
+	               		 	$('#iniciar-jogo').text('INICIAR INTERVALO:'+results.rows.item(0).interval_min + ' min');
+    	           		    sessionStorage.setItem('vtempo', 0);
+        	        	    sessionStorage.setItem('vtempo_min', results.rows.item(0).interval_min );
+            	    	    sessionStorage.setItem('vcronometro', results.rows.item(0).intervalo);
+                	   	    sessionStorage.setItem('vcronometro_real', results.rows.item(0).intervalo_real);
+                   	 	
+            	   		} else {
+            		   
+            		   		if (results.rows.item(0).segundo_encerrado !=1){
+            			   	 
+                     			$('#iniciar-jogo').text('INICIAR 2º.TEMPO:'+results.rows.item(0).segundo_tempo_min + ' min');
+                         	 	$('#comentario').text(results.rows.item(0).comentario_tela_final);	 
+                     		   
+	                         	sessionStorage.setItem('vtempo', 2);
+                    	    	sessionStorage.setItem('vtempo_min', results.rows.item(0).segundo_tempo_min );
+                    	    	sessionStorage.setItem('vcronometro', results.rows.item(0).segundo_tempo);
+                       	    	sessionStorage.setItem('vcronometro_real', results.rows.item(0).segundo_tempo_real);
+                       	    
+            		   		}
+            	   		} 	
+            	 	} 
+               	 }
+            	 
+            	 
+	    	}
+
+
+
+
+            function errorIniciarJogos() {
+                alert('Jogos Não Encontrado!');
+                fc_link('jogos.html');
+            }
+
+            function successCBSQL() {
+                console.log('Executado com sucesso!');
+
+                fc_link('jogos.html');
+            }
+
+
+            function fc_choice(btn) {
+                if (btn == 1) {
+                    db.transaction(fc_deletar_ev, errorCB);
+                }
+                if (btn == 2) {
+                    return;
+                }
+
+            }
+
+
+        </script>
+
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+        
+            <div id="menu-topo1">
+                <img src="img/ic-menu/jogos.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> INICIAR JOGOS</span>
+                
+            </div> 
+            
+             
+            <!--  <div id="iniciar-jogos-evento"  > Agendados </div>
+            -->
+        
+        </header>        
+        <div id="container-ic-interna">
+
+            <div class="item-jogos">
+                <div class="foto-time">
+                    <img src="" id="codtime1" width="60" height="60" />
+                    <span id="time1"> Flamengo </span>
+                </div>
+
+                <div class="jogo-placar">
+                    <span class="jogos-x" style="width: 100%; text-align: center; font-size: 40px; float: left; margin-top: 10px; ">x</span>
+                </div>
+
+                <div class="foto-time">
+                    <img src=""  id="codtime2"  width="60" height="60" />
+                    <span id="time2"> Teste </span>
+                </div>
+            </div>
+            
+            <div id="descricao-iniciar-jogo">
+                <table id="tbl-desc-inicio-jogo">
+                    
+                    <tr>
+                         <td> <span class="desc-tit-iniciar-jogo"> Data: </span>  <span id="data" class="desc-valor-iniciar-jogo"> 17/06/2014 </span> </td>
+                         <td> <span class="desc-tit-iniciar-jogo"> Hora: </span>  <span id="hora_inicial"class="desc-valor-iniciar-jogo"> 17h </span> </td>
+                        <!--   <td> <span class="desc-tit-iniciar-jogo"> Tempo jogo: </span>  <span id="tempo" class="desc-valor-iniciar-jogo"> 30min </span> </td> -->
+                    </tr>
+                    <tr>
+                        <td> <span class="desc-tit-iniciar-jogo"> Local: </span> <span id="desloc" class="desc-valor-iniciar-jogo"> Praca da saudade </span> </td>
+                        <td> <span class="desc-tit-iniciar-jogo"> Juiz: </span>  <span id="desjuiz" class="desc-valor-iniciar-jogo"> Fulano de tal </span> </td>
+                    </tr>
+                    <tr>
+                        <td> <span class="desc-tit-iniciar-jogo">Comentario</span> </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"> <textarea  id="comentario" class="textarea-class" rows="4"> </textarea> </td>
+                    </tr>
+                </table>
+                
+                
+                <div id="iniciar-jogo" class="padrao-btn" onclick="fc_link('jogo-andamento.html')"	 style="margin-bottom: 130px;"> INICIAR JOGO </div>
+
+                
+            </div>
+
+            <div class="clear"> </div>
+        </div>
+ 
+         <footer class="rodape-fixo" id="footer1" >
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+            <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+ 
+
+
+
+  <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+
+    </body>
+</html>

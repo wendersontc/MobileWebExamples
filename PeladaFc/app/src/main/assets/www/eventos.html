@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        
+        <script type="text/javascript" src="cordova.js"></script>
+		
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+         
+        <script>
+        
+	        var db = null;
+	        var vcodeve=null;
+	        sessionStorage.setItem('vId', null);
+	        var vgrutel    = localStorage.getItem('grutel');
+	    	
+	    	function onLoad() {
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		db.transaction(fc_lista_eventos, errorCB);
+	    	}
+	    	
+	    	function fc_lista_eventos(tx){
+	    		var sql = 'select * from tbl_evento order by codeve desc';
+	    		tx.executeSql(sql, [], successLista, errorCB);
+	    	}
+	    	
+	    	function successLista(tx, results){
+	    		
+	    		var qtd_linhas = results.rows.length;
+	    		var nome_evento = '', idev = '';
+	    		var htm = '';
+	    		var vcons = sessionStorage.getItem('vCons');
+	    		for(var i=0; i< qtd_linhas; i++){
+	    			nome_evento = results.rows.item(i).deseve;
+	    			idev = results.rows.item(i).codeve;
+	    			htm += "<li >  <span style='font-size:26px;'";
+	    		    if (vcons=1) {
+	    		    	htm += " onclick='fc_retorna_grava_evento("+idev+",\"" + nome_evento+ "\")'>  ";
+	    		    }else{
+	    		        htm += "> ";
+	    		    }
+	    		    htm += nome_evento +" </span> <img src='img/editar.jpg' onclick='fc_editar_evento("+idev+")' class='imagem_editar'  alt='logo' width='25' height='25'/> </li> " ;
+	    		}
+	    		//alert(htm);
+	    		$('#lista').html(htm);
+	    	}
+	    	
+	    	
+	    	function fc_editar_evento(idev){
+	    		sessionStorage.setItem('vId', idev);
+	    		vcodeve=idev;
+	    		fc_link('cadastro-evento.html');
+	    	}
+	    	
+	    	
+
+            function fc_show_hide_menu(){
+                var bool = null;
+                bool = $('#showHideMenu').is(':visible');
+                if(! bool){
+                    $('#showHideMenu').show(5);
+                }else{
+                    $('#showHideMenu').hide(5);
+                }
+            }
+            
+            
+            function fc_retorna_grava_evento(idev, deseve){
+            	sessionStorage.setItem('vId', idev);
+            	vcodeve=idev;
+            	localStorage.setItem('codeve',idev);
+            	localStorage.setItem('deseve',deseve);
+            	if (vcodeve=='null' || vcodeve==null){
+        			alert('Um evento sempre deve estar selecionado !');
+        			fc_link_consulta('index.html');
+        		}
+        		fc_link('menu.html');
+            	
+            }
+
+           
+
+          
+            
+        </script>
+        
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png"  class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> EVENTOS </span>
+                <!-- <img src="img/propriedade-menu.png" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                <span class="adicionar" onclick="fc_editar_evento('null')" > + </span>
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+            <ul id="lista">
+                <!-- <li> Campeonato Brasileiro 1  <span class="seta-ir">  > </span> </li>  -->
+            </ul>
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+
+
+        <!-- MENU GERAL IMPORT -->
+        <!-- 
+        <div id="showHideMenu" style="display: none"> 
+            <div id="escurecer">
+            </div>
+            <div id="menu-geral">
+                <ul id="lista-menu-geral">
+                    <li onclick="fc_editar_evento(null)"> <img src="img/ic-menu/geral/evento.png" style="float: left; margin: 0px 5px 0px 5px;" />  <span class="text-lista-geral"> Criar Evento </span>  <div class="clear"> </div> </li>
+                    <!-- <li> <img src="img/ic-menu/geral/editar.png" style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Editar </span> <div class="clear"> </div></li> 
+                    <li> <img src="img/ic-menu/geral/foto.png" style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Inserir Foto </span> <div class="clear"> </div> </li>
+                    <li> <img src="img/ic-menu/geral/excluir.png" style="float: left; margin: 0px 5px 0px 5px;"/> <span class="text-lista-geral"> Apagar </span> <div class="clear"> </div></li> 
+                </ul>
+            </div>
+        </div>
+         -->
+        <!-- MENU GERAL IMPORT -->
+
+
+
+    </body>
+</html>

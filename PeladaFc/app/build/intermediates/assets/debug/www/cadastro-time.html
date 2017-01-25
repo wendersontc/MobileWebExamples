@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+		<script type="text/javascript" src="cordova.js"></script>
+		
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+		
+        <script>
+	        var db = null;
+	        var vid = sessionStorage.getItem('vId');	
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+            
+	    	function onLoad() {
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+    		
+	    		if(vid != 'null'){
+	    			db.transaction(editarEvento, errorCB);
+	    			$('.adicionar').css('display','inline');
+	    		}
+	    			    		
+	    	}
+	    		    	
+	    	
+	    	function editarEvento(tx){
+	    		var sql = 'select * from tbl_time'+
+	    		          ' where codtim = ' + vid ;
+	    		//alert(sql);
+	    		tx.executeSql(sql, [], successEditar, errorCB);
+	    	}
+        	
+	    	function successEditar(tx, results){
+	    		 $('#destim').val(results.rows.item(0).destim); 
+	    		 $('#sigla').val(results.rows.item(0).sigla); 
+	    	}
+	    	
+
+            /**
+             * FUNCAO AVANCAR E VOLTAR CADSATRO DE EVENTO
+             */
+            function fc_salva_valida() {
+            	var ok = true;
+            	var txt = '';
+            	
+            	
+            	var vdestim = $('#destim').val();
+            	var vsigla = $('#sigla').val();
+            	
+            	if(vdestim == '' || vdestim == null){
+            		ok = false;
+            		txt += 'Preencha o campo Nome do Time! \n';
+            	}
+            	if(vsigla == '' || vsigla == null){
+            		ok = false;
+            		txt += 'Preencha o campo Sigla! \n';
+            	}
+            	            	
+            	
+            	if(ok){
+            		salvar_evento();
+            	}else{
+            		alert(txt);
+            		return;
+            	}
+            }
+            
+            
+            function salvar_evento(){
+            	db.transaction(fc_salvar_evento, errorCB);
+            }
+            
+            function fc_salvar_evento(tx){
+            	
+            	var vdestim = $('#destim').val();
+            	var vsigla = $('#sigla').val();
+            	var sql = '';
+				if(vid == 'null'){
+            			sql = "insert into tbl_time(destim,sigla, codeve, grutel,enviado)" + 
+            		  " values ('"+vdestim+"','"+vsigla+"',"+vcodeve+","+vgrutel+",0)";
+				}else{
+					sql = "update tbl_time set enviado=0,destim = '"+vdestim+"', sigla = '"+vsigla+"' where codtim = " +vid;
+				}
+				
+            	console.log(sql);
+            	tx.executeSql(sql, [], successCBSQL, errorCB);
+            	
+            	
+            }
+            
+           
+            function successCBSQL() {
+            	
+            	
+            	            	
+                	fc_link('times.html');
+        		
+            }
+            
+            function deletar_evento(){
+            	if(vid != 'null'){
+            		navigator.notification.confirm(
+            		"Deseja, realmente, excluir o Time?",
+            		fc_choice,
+            		"Excluir",
+            		["Sim","Não"]
+            		);
+            		
+            		//db.transaction(fc_deletar_ev, errorCB);
+            	}
+            }
+            
+            function fc_choice(btn){
+            	if(btn == 1){db.transaction(fc_deletar_ev, errorCB);}
+            	if(btn == 2){return;}
+            	
+            }
+            
+            function fc_deletar_ev(tx){
+            	tx.executeSql('delete from tbl_time where codtim =' + vid, [], successDelete, errorCB);
+            	
+            }
+            
+            function successDelete(){
+            	alert('Time excluido com sucesso!');
+            	fc_link('times.html');
+            }
+                        
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> TIME </span>
+                <!-- <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                
+                <span class="adicionar" onclick="deletar_evento()" style="color: #f00; display: none"> - </span>
+               
+            </div> 
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="cad-parte1">
+                <br/>
+                <br/>
+                <br/>                 
+                <table class="tbl-inserir-evento">
+                	<tr>
+                        <td> Nome do Time</td>
+                    </tr>
+                    <tr> 
+                        <td colspan="3"> <input type="text" id="destim" class="input-class-cad-evento" placeholder="Toque para inserir nome do Time" /> </td>
+                    </tr>
+                    <tr>
+                        <td> Sigla</td>
+                    </tr>
+                    <tr> 
+                        <td colspan="3"> <input type="text" id="sigla" class="input-class-cad-evento" placeholder=" Sigla" /> </td>
+                    </tr>
+                </table>
+				 <br/>
+                <br/>
+                <div class="padrao-btn" onclick="fc_salva_valida()" > Salvar</div>
+            </div>
+            
+            <div class="clear"> </div>
+        </div>
+        
+         <footer class="rodape-fixo" id="footer1" >
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+    </body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+		<script type="text/javascript" src="cordova.js"></script>
+		
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+		
+        <script>
+      
+	        var db = null;
+	       
+	        var vcodeve     = localStorage.getItem('codeve');    		
+            var vgrutel     = localStorage.getItem('grutel');
+            var vdeseve     = localStorage.getItem('deseve');
+            var vNomeGrupo  = localStorage.getItem('nomegrupo');
+            var vSenha      = localStorage.getItem('senha');
+            var vSenha2     = localStorage.getItem('senha2');
+            var vEmail      = localStorage.getItem('email');
+            var vTel        = localStorage.getItem('tel');
+            var vAtt	    = localStorage.getItem('att');
+         
+	    	
+	    	function onLoad() {
+	    	
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	   // 	alert(vAtt);
+	    		$('#nome-grupo').val(vNomeGrupo);
+	    		$('#senha-grupo').val(vSenha);
+	    		$('#confir-senha-grupo').val(vSenha2);
+	    		$('#email').val(vEmail);
+	    		$('#telefone').val(vTel);
+	    	//    $('#r' + vAtt).attr('checked','checked');
+	    	    
+	    	    MostraMensagemCarga=1;
+	    	
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    	}
+	    	
+	    	function fc_validar(){
+	    		ShowHideLoad('true');
+	    		vNomeGrupo = $('#nome-grupo').val();
+	    		vSenha     = $('#senha-grupo').val();
+	    		vSenha2    = $('#confir-senha-grupo').val();
+	    		vEmail     = $('#email').val();
+	    		vTel       = $('#telefone').val();
+	    		vAtt	   = $('input[type="radio"]:checked').val();
+	    	
+	    		if(vNomeGrupo == '' || vSenha=='' || vSenha2 == '' || vEmail =='' || vTel ==''){
+	    			$('#toast').text('Preencha todos os campos!').fadeIn(400).delay(3000).fadeOut(400);
+	    			//$('#toast').css('width', '-' + eval($('#toast').width()/2)+  'px');
+	    			return;
+	    		}else
+	    	     if(vSenha != vSenha2){
+	    	    	$('#toast').text('Senhas não conferem!').fadeIn(400).delay(3000).fadeOut(400);
+	    	    	//$('#toast').css('width', '-' + eval($('#toast').width()/2)+  'px');
+	    	    	return;
+	    	     }else{
+	    	            var JSONObject = {
+	    	    			 "id": vgrutel,
+	    	    			 "nomegrupo": vNomeGrupo,
+	    	    			 "senhagrupo": vSenha,
+	    	    			 "email" : vEmail,
+	    	    			 "telefone": vTel,
+	    	    			 "atualizar": 1
+	    	    			 }; 
+	    	    	 
+	    	            //var urlWS = "http://192.168.100.94:8080/PeladaFcWS/resource/fc_cria_grupo/"; //URL do WS
+	    	            var urlWS =  pathWS + "fc_cria_grupo/"; //URL do WS
+	    	            $.ajax({
+	    	                xhrFields: {
+	    	                    withCredentials: true
+	    	                },
+	    	                type: "POST",
+	    	                url: urlWS + JSON.stringify(JSONObject),
+	    	                dataType: "text",
+	    	                data: JSON.stringify(JSONObject),
+	    	                async: true,
+	    	                cache: false,
+	    	                crossDomain: true
+	    	            }).done(function(data) {
+	    	                if(data != null && data!='null'){
+	    	                	
+	    	                	vgrutel = data;	
+	    	                	
+	    	                	db.transaction(salvarDadosBDLocal, errorCB, successCB);
+	    	                }
+	    	            }).fail(function(error) {
+	    	            	ShowHideLoad('false');
+	    	                alert('Erro, Servidor indisponível.'); //Se houve algum erro
+	    	            });
+	    	            
+	    	    	 
+	    	    	 
+	    	    	 //db.transaction(salvarDadosBDLocal, errorCB, successCB);
+	    	    	 //$('#cad-parte1').hide(10);
+	    	    	 //$('#cad-parte2').show(300);
+	    	     }
+	    	}
+	    	
+	    	function salvarDadosBDLocal(tx){
+	    		ShowHideLoad('false');
+	    	
+	           localStorage.setItem('grutel',vgrutel);	          
+	           localStorage.setItem('nomegrupo',vNomeGrupo);
+	           localStorage.setItem('senha',vSenha);
+	           localStorage.setItem('senha2',vSenha2);
+	           localStorage.setItem('email',vEmail);
+	           localStorage.setItem('tel',vTel);
+	           //localStorage.setItem('att',vAtt);
+	           localStorage.setItem('att',1);
+	         
+	            var sql='update tbl_posicao set grutel =' + vgrutel;
+	        
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_local set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    	
+	    		sql='update tbl_juiz set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_time set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_jogador set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_jogador_time set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_evento set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_jogos set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_jogos_acao set grutel =' + vgrutel;
+	    		tx.executeSql(sql);
+	    		
+	    		sql='update tbl_jogos_vermelho set grutel =' + vgrutel;	    		
+	    		tx.executeSql(sql, [], successSalvar, errorCB);
+	    		
+	    	}
+	    	
+	    	function successSalvar(tx, results){
+	    		ShowHideLoad('false');
+	    		$('#id-grupo').val(vgrutel);
+            	$('#senha-id-grupo').val(vSenha);
+            	
+	    		$('#cad-parte1').hide(10);
+   	    	 	$('#cad-parte2').show(300);
+   	    	 	
+   	    	    
+	    	}
+	    	
+	    	
+	    	function fc_confirmar(){
+	    		fc_link('menu.html');
+	    	}
+	    	
+	    	
+	    	
+	    	function fc_validar_grupo(){
+	    	
+	    		 $('#cad-parte1').hide(10);
+   	    	     $('#cad-parte3').show(300);
+   	    	   
+	       }
+	    	
+	    	function fc_cancelar_grupo(){
+	    		 $('#cad-parte3').hide(10);
+  	    	     $('#cad-parte1').show(300);
+	       }
+	    	
+	    	
+	    	
+	    	function fc_confirmar_grupo() {
+                var ng = $('#id-gp').val(), sg = $('#senha-gp').val();
+
+                if (ng == "" || sg == "") {
+                    $('#toast').text('Grupo e senha inválidos!').fadeIn(400).delay(3000).fadeOut(400);
+                    return;
+                }
+                //alert('1');
+                var callbackDone = function(data) {
+                	alert('2');
+                    if (data !== null) {
+                        alert(data);
+                        var grupo=eval(data);
+                        localStorage.setItem('grutel',grupo[0]);	          
+         	            localStorage.setItem('nomegrupo',grupo[1]);
+         	            localStorage.setItem('senha',grupo[2]);
+         	            localStorage.setItem('senha2',grupo[2]);
+         	            localStorage.setItem('email',grupo[3]);
+         	            localStorage.setItem('tel',grupo[4]);
+         	           
+         	            $('#nome-grupo').val(grupo[1]);
+      	    		    $('#senha-grupo').val(grupo[2]);
+      	    		    $('#confir-senha-grupo').val(grupo[2]);
+      	    		    $('#email').val(grupo[3]);
+      	    		    $('#telefone').val(grupo[4]);
+      	    		    
+      	    		  fc_apaga_reatualiza();
+         	           
+                    } else {
+                    	//alert('ss');
+                    	ShowHideLoad('false');
+                        $('#toast').text('Grupo e senha inválidos!').fadeIn(400).delay(3000).fadeOut(400);
+                    }
+                };
+                var callbackFail = function(data) {
+                    console.log('Erro na validacao de grupo');
+                    ShowHideLoad('false');
+                };
+
+
+                var json = {"grupo": ng, "senha": sg};
+                console.log('JSON valida grupo! ' + json);
+                //A Funcao comunicaWS está no arquivo js/main.js
+                alert('3');
+                comunicaWS("fc_valida_grupo", json, "POST", callbackDone, callbackFail);
+            }
+	    	
+	    	function fc_apaga_reatualiza() {	    		
+	    		db.transaction(faz_apaga_reatualiza, errorCB);
+	    		
+	    	}
+	    	function faz_apaga_reatualiza(tx){
+	    		tx.executeSql('delete from tbl_posicao');
+	    		tx.executeSql('delete from tbl_local');
+	    		tx.executeSql('delete from tbl_juiz');
+	    		tx.executeSql('delete from tbl_time');
+	    		tx.executeSql('delete from tbl_jogador');
+	    		tx.executeSql('delete from tbl_evento');
+	    		tx.executeSql('delete from tbl_jogos_vermelho');
+	    		tx.executeSql('delete from tbl_jogos_acao');
+	    		tx.executeSql('delete from tbl_jogos');
+	    
+	    		carga_celular_all()
+	    	}
+	    	function carga_celular_all(){
+	    		
+	    		ShowHideConfig();
+	    		var callbackDone = function(data) {
+	    			
+	    		 	if(data != null && data != 'null'){
+	    		 		sessionStorage.setItem('SqlWsForMobile', data);
+	    		 		db.transaction(atualizarBancoCelular, errorAtt, successAtt);
+	    		 	}
+	    		 };
+	    		
+	    		 var callbackFail = function(err) {
+	    			 console.log('Erro na validacao de usuario');
+	    			 alert('Erro na validacao de usuario');
+	    			 //alert('Erro na validacao de usuario');
+	    			 ShowHideLoad('false');
+	    		 };
+	    		
+	    		 
+	    		 var json = {"grupo": $('#id-gp').val() , "senha": $('#senha-gp').val(), "evento": "0", "modulo": "0", "idjogo":"0"}; 
+	    		// alert(JSON.stringify(json));
+	    		 console.log('JSON valida grupo = ' + JSON.stringify(json));
+	    		 //A Funcao comunicaWS está no arquivo js/main.js
+	    		 comunicaWS("fc_carga_celular", json, "POST", callbackDone, callbackFail);
+	    	}
+	    	
+	    	
+function atualizarBancoCelular(tx){
+	    		
+	    		
+	    		
+	    		var sqlWs = sessionStorage.getItem('SqlWsForMobile');
+	    		var res = sqlWs.split('!');
+	    		//alert(res[0]);
+	    		//alert(res[res.length]+'\n\n'+res[res.length-1]+'\n\n'+res[res.length-2]+'\n\n'+res[res.length-3]);
+	    		
+	    		//alert(res[0]);
+	    		//alert('Tamanho: ' + res.length + '\n' +  res[res.length -1]);
+	    		
+	    		for(var i = 0; i<= res.length -1; i++){
+	    			//alert(res[i]);
+	    			tx.executeSql(res[i]);
+	    			console.log(res[i]+'\n');
+	    		}
+	    		
+	    		//Guarda hora da ultima atualizacao temporariamente
+	    		//sessionStorage.setItem('vDataLastUpdtateTemp',res[0]);
+	    		
+	    	}
+	    	
+	    	function successAtt(){
+	    		alert('Atualização realizada com sucesso!');
+	    		//sessionStorage.setItem('vDataLastUpdtateTemp',res[0]);
+	    		//localStorage.setItem('vDataLastUpdtate',sessionStorage.getItem('vDataLastUpdtateTemp'));
+	    		ShowHideLoad('false');
+	    		location.reload();
+	    	}
+	    	
+	    	function errorAtt(err){
+	    		alert('Houve um erro de processamento! por favor, tente em um minuto. Erro: '+ err.code);
+	    		ShowHideLoad('false');
+	    	}
+	    	
+	    	
+	    	
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> CADASTRO DE GRUPO </span>
+                <!-- <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                
+               
+            </div> 
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="cad-parte1" style="margin-bottom: 50px;">
+                <table class="tbl-inserir-evento">
+                    <tr>
+                        <td> Nome do grupo</td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2"> <input type="text" id="nome-grupo" class="input-class-cad-evento" placeholder="Toque para inserir o nome do grupo" /> </td>
+                    </tr>
+
+                    <tr>
+                        <td> Senha</td>
+                        <td>Confirmar Senha</td>
+                    </tr>
+                    <tr> 
+                        <td> <input type="password" id="senha-grupo" class="input-class-cad-evento" /> </td>
+                        <td> <input type="password" id="confir-senha-grupo" class="input-class-cad-evento" /> </td>
+                    </tr>
+                    <tr>
+                        <td>E-mail</td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2"> <input type="text" id="email" class="input-class-cad-evento" /> </td>
+                    </tr>
+                    <tr>
+                        <td> Telefone</td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2"> <input type="tel" id="telefone" class="input-class-cad-evento" /> </td>
+                    </tr>
+                </table>
+                <table class="tbl-inserir-evento">
+                <!--   
+                    <tr>
+                        <td> Atualiza consulta:</td>
+                    </tr>
+                 <tr>
+                    	<td> &nbsp;<input id="r1" type="radio" id="acao_jogo" name="att_consulta" checked="checked" value="1" />  A cada a&ccedil;&atilde;o de jogo </td>
+                    </tr>
+                    <tr>
+                    	<td> &nbsp;<input id="r2" type="radio" id="fim_jogo" name="att_consulta" value="2" />  A cada fim de jogo </td>
+                    </tr>
+               !-->     
+                </table>
+                
+                <div class="padrao-btn" onclick="fc_validar()"> Validar </div>
+                <br/>
+                <div class="padrao-btn" onclick="fc_validar_grupo()">Grupo Existente</div>
+                <div class="padrao-btn" onclick="alterarIpServidor()"> Alterar IP</div>
+            	
+            	<br/>  
+            </div>
+            
+            <div id="cad-parte2"  style="display: none">
+            	<table class="tbl-inserir-evento">
+            		<tr>
+            			<td colspan="2"> Use este ID e Senha para consultar os resultados do seu grupo no aplicativo ConsultaPeladaFC. </td>
+            		</tr>
+            		<tr>
+            			<td> id:</td>
+            			<td> <input type="text" id="id-grupo"  readonly="readonly" /> </td>
+            		</tr>
+            		<tr>
+            			<td> Senha: </td>
+            			<td> <input type="text" id="senha-id-grupo" readonly="readonly" /> </td>
+            		</tr>
+            	</table>
+            	<div class="padrao-btn" onclick="fc_confirmar()"> Retornar </div>  
+            	<br/>          	
+            	<div class="padrao-btn" onclick="fc_carga_servidor()"> Enviar Dados </div>
+            	<br/>
+            	         
+            	<br/>
+                
+            </div>
+            
+            <div id="cad-parte3"  style="display: none">
+            	<table class="tbl-inserir-evento">
+            		<tr>
+            			<td colspan="2">Digite grupo e a Senha para Recuperar os dados </td>
+            		</tr>
+            		<tr>
+            			<td> id:</td>
+            			<td> <input type="tel" id="id-gp"  /> </td>
+            		</tr>
+            		<tr>
+            			<td> Senha: </td>
+            			<td> <input type="text" id="senha-gp" /> </td>
+            		</tr>
+            	</table>
+            	<div class="padrao-btn" onclick="fc_confirmar_grupo()"> Confirmar </div>  
+            	<br/>          	
+            	<div class="padrao-btn" onclick="fc_cancelar_grupo()"> Cancelar </div>
+            	<br/>
+            	         
+            	<br/>
+                
+            </div>
+           
+            <div class="clear"> </div>
+        </div>
+        
+        <div id="toast" style="width: auto; padding: 2px 5px; position: fixed; bottom: 60px; left:25%; border-radius: 5px; background: #232323; z-index: 99999999999; color: #efefef; display: none; " > </div>
+        
+         <footer class="rodape-fixo" id="footer1" >
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+    </body>
+</html>

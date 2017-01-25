@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        <script type="text/javascript" src="js/jquery.js" ></script>
+          <script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+        <script>
+		        var db = null;
+		        var vcodeve = localStorage.getItem('codeve');
+	            var vdeseve = localStorage.getItem('deseve');
+		    	function onLoad() {
+		    		document.addEventListener("deviceready", onDeviceReady, false);
+		    	}
+		
+		    	function onDeviceReady() {
+		    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+		    		db.transaction(CarregaClassificacao, errorCB, successCB);
+		    	}
+		    	
+		    	function CarregaClassificacao(tx){
+		    		var sql='select * from (select codtim, destim, sigla, codjog, desjog, apelido, nro, sum(azu) as azu, sum(ama) as ama, sum(ver) as ver '+
+		    				' from (select b.codtim, t.destim, t.sigla, b.codjog, j.desjog, j.apelido, j.nro, '+
+		    				' case when codcao=2 then 1 else 0 end as azu, '+
+		    				' case when codcao=3 then 1 else 0 end as ama, '+
+		    				' case when codcao=4 then 1 else 0 end as ver '+
+                    ' from tbl_jogos a'+ 
+                    ' inner join tbl_jogos_acao b on a.id_jogo=b.id_jogo'+                          
+                    ' inner join tbl_time    t on b.codtim=t.codtim'+
+                    ' inner join tbl_jogador j on b.codjog=j.codjog'+
+                    ' where b.codcao<>1  and a.codeve=' + vcodeve + ' ) s       '+
+                    ' group by  codtim, destim, sigla, codjog, desjog, apelido) '+
+                    ' order by ver desc, azu desc, ama desc ';
+		    		tx.executeSql(sql, [], listaTabelaClassificacao, errorCB);
+		    	}
+		    	
+		    	function listaTabelaClassificacao(tx, results){
+		    		var htm = '', choiceClass = '', diferentLine = '';
+		    		htm +='<table id="tbl-classificacao"> '+
+		        		  '<thead> '+
+		            		  '<tr> '+
+			          			'<th> Apelido </th> '+
+			          			'<th> Time </th> '+
+			          			'<th> Ver </th> '+
+			          			'<th> Azu </th> '+
+			          			'<th> Ama </th> '+
+		          			  '</tr> '+
+		          		  '</thead> ' +
+		          		  '<tbody> ';
+		        		  
+		    		for(var i = 0; i < results.rows.length; i++){
+		    			if(i%2 == 0){
+		    				choiceClass  = 'm2'; 
+		    			}else{
+		    				choiceClass  = 'm1'; 
+		    			}
+		    			
+		    			if(i<=2){
+		    				diferentLine = 'udt';
+		    			}else{
+		    				diferentLine = 'udtMais';
+		    			}
+		    				htm += '<tr class="'+choiceClass+'"> '+
+					    				'<td> <span class="'+diferentLine+'"> '+ eval(i+1) +' </span>'+results.rows.item(i).apelido+'</td> '+
+				            			'<td>'+results.rows.item(i).sigla+'</td> '+
+				            			'<td>'+results.rows.item(i).ver+'</td> '+
+				            			'<td>'+results.rows.item(i).azu+'</td> '+
+				            			'<td>'+results.rows.item(i).ama+'</td> '+
+				            		'</tr>';
+		    		}
+		    		
+		    		htm += '</tbody> </table>';		    				
+		    		$('#tblPlace').html(htm);
+		    	}
+    </script>
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                 <img src="img/estatisticas/tabela.png" class="logo-interna" alt="logo" width="45" height=30 style="margin-top: 15px;"/>
+                <span class="titulo-interna"> CART&Otilde;ES </span>
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+        <div id="tblPlace">
+            <table id="tbl-classificacao">
+            <!-- 
+            	<thead>
+            		<tr>
+            			<th> Nome </th>
+            			<th> Sigla </th>
+            			<th> N. Cart&otilde;es </th>
+            		</tr>
+            	</thead>
+            	<tbody>
+            		<tr class="m2">
+            			<td> <span class="udt"> 1 </span> Jhonas Tadeu </td>
+            			<td> SPFC </td>
+            			<td> 3 </td>
+            		</tr>
+            		
+            		<tr class="m1">
+            			<td> <span class="udt"> 2 </span> Thomas Mendes </td>
+            			<td> COR </td>
+            			<td> 3 </td>
+            		</tr>
+            		<tr class="m2">
+            			<td> <span class="udt"> 3 </span> Jhonas Tadeu </td>
+            			<td> SPFC </td>
+            			<td> 3 </td>
+            		</tr>
+            		
+            	
+            	</tbody>
+            	 -->
+            </table>
+            </div>
+            <div class="clear"> </div>
+            <br/><br/>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+            <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+    </body>
+</html>

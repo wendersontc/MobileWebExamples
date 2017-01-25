@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        
+        <script type="text/javascript" src="cordova.js"></script>		
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+         
+        <script>
+        
+	        var db = null;
+	        var vcodeve=null;
+	        sessionStorage.setItem('vId', null);
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+	    	
+	    	function onLoad() {
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		db.transaction(fc_lista_times, errorCB);
+	    	}
+	    	
+	    	function fc_lista_times(tx){
+	    		//var sql = 'select * from tbl_time where codeve='+vcodeve+'  order by destim ';
+	    		var sql = 'select * from tbl_time  order by destim ';
+	    		tx.executeSql(sql, [], successLista, errorCB);
+	    	}
+	    	
+	    	function successLista(tx, results){
+	    		
+	    		var qtd_linhas = results.rows.length;
+	    		var nome_evento = '', idev = '';
+	    		var htm = '';
+	    		var vcons = sessionStorage.getItem('vCons');
+	    		
+	    		  for(var i=0; i< qtd_linhas; i++){
+	    			nome_evento = results.rows.item(i).destim;
+	    			idev = results.rows.item(i).codtim;
+	    		     
+	    		    htm += "<li > <img  class='lista-time-img' src='file:///mnt/sdcard/peladaFC/time_"+idev+".jpg'  width='45' height='45' onclick='fc_getPhoto("+idev+")' />  <span class='lista-time-tit' ";
+	    		    if (vcons=1) {
+	    		    	htm += " onclick='fc_retorna("+idev+",menu.html)'>  ";
+	    		    }else{
+	    		        htm += "> ";
+	    		    }
+	    		    
+	    		    htm += nome_evento +
+	    		    " </span> <span> <img src='img/editar.jpg' onclick='fc_editar_local("+idev+")' class='imagem_editar3' alt='logo' width='25' height='25'/> </span>" +
+	    		    " <div class='clear'></div> </li>";
+                
+	    		  }
+	    		//alert(htm);
+	    		$('#lista').html(htm+'<br/><br/>');
+	    		   
+	    	}
+	    	
+	    	
+           
+            
+	    	function fc_editar_local(idev){
+	    		sessionStorage.setItem('vId', idev);
+	    		vcodeve=idev;
+	    		fc_link('cadastro-time.html');
+	    	}
+	    	
+	    	
+			//CONSULTA A FOTOS DO CFELULAR
+            
+            function getPhoto(srcs){
+		    	//this.photoDestinationType=navigator.camera.DestinationType;
+				//var source =  navigator.camera.PictureSourceType.PHOTOLIBRARY;
+											   //SAVEDPHOTOALBUM, PHOTOLIBRARY, CAMERA, ALL;
+				
+		    	navigator.camera.getPicture(successFn, errorFn, { quality: 50,
+			        destinationType:  Camera.DestinationType.FILE_URI,
+			        sourceType: srcs,
+			        mediaType: navigator.camera.MediaType.PICTURE  });
+		    }
+		    
+		    function errorFn(message) {
+		        alert('Failed because: ' + message);
+		      }
+		    
+		    
+		    function successFn(imageData) {
+		       alert(imageData);
+		       //var image = document.getElementById('imgg');
+		       //image.src = "data:image/jpeg;base64," + imageData;
+		       
+		       var gotFileEntry = function(fileEntry) {
+		           alert("got image file entry: " + fileEntry.fullPath);
+		           
+		           var gotFileSystem = function(fileSystem) {
+					//alert("got file system " + fileSystem);
+		               fileSystem.root.getDirectory("PeladaFC", {
+		                   create : true
+		               }, function(dataDir) {
+		            	   
+		            	   alert('datadir ' + dataDir);
+		                   // copy the file
+		                   fileEntry.copyTo(dataDir, "time_" + sessionStorage.getItem("codTimeAtual") + ".jpg" , null, fsFail);
+
+		               }, dirFail);
+		               
+
+		           };
+		           // get file system to copy or move image file to
+		           window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, gotFileSystem, fsFail);
+		       };
+		       // resolve file system for image
+		       window.resolveLocalFileSystemURI(imageData, gotFileEntry, fsFail);
+
+		       // file system fail
+		       var fsFail = function(error) {
+		           alert("Erro pq o usuario: " + error.code);
+
+		       };
+
+		       var dirFail = function(error) {
+		    	   alert("Erro de diretorio cod: " + error.code);
+
+		       };
+		       
+		      }
+		    
+            function fc_getPhoto(idTime){
+	    		//alert('getPhoto');
+	    		sessionStorage.setItem('codTimeAtual', idTime);
+	    		getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY);
+	    	}
+	    	
+            function fc_refresh(){
+            	//alert(2);
+            	location.reload();
+            }
+	    	             
+            
+        </script>
+        
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png"  class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> TIME </span>
+                <!-- <img src="img/propriedade-menu.png" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                <span class="adicionar" onclick="fc_editar_local('null')" > + </span>
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+            <ul id="lista">
+                <!-- <li style="background: red"> 
+                	<img  class="lista-time-img" src="" width="45" height="45" onclick="fc_getPhoto('123')" /> 
+                	<span class="lista-time-tit"> Campeonato Brasileiro 1  </span>
+                	<span> <img src='img/editar.jpg' onclick='fc_editar_local("idev")' class='imagem_editar3'  alt='logo' width='25' height='25'/> </span>
+                	<div class="clear"></div> 
+                </li> 
+                <li style="background: red"> 
+                	<img  class="lista-time-img" src="" width="45" height="45" onclick="fc_getPhoto('123')" /> 
+                	<span class="lista-time-tit"> Campeonato Brasileiro 1  </span>
+                	<span> <img src='img/editar.jpg' onclick='fc_editar_local("idev")' class='imagem_editar3'  alt='logo' width='25' height='25'/> </span>
+                	<div class="clear"></div> 
+                </li>  -->
+            </ul>
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+           <!--  <img src="img/refresh.png" onclick="fc_refresh()"	class="imagens-rodapep" style="margin: 13px 10px 0px 0px" /> -->
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+        </footer>
+		
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+		
+
+
+    </body>
+</html>

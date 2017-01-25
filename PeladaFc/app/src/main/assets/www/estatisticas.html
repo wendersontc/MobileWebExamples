@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+		
+        <script>
+        var vcodeve = localStorage.getItem('codeve');
+        if (vcodeve=='null' || vcodeve==null){
+			
+			fc_link_consulta('menu.html');
+			 	
+		}
+        
+        </script>
+
+    </head>
+    <body>
+        <header>
+            <div id="menu-topo1" style="margin-top: -20px;">
+                <img src="img/ic-menu/estatistica.png" class="logo-interna" alt="logo" width="45" height=30" style="margin-top: 15px;"/>
+                <span class="titulo-interna"> ESTAT&Iacute;TICAS </span>
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="menu-tela-times">
+                <a href="rel-tabela-classificacao.html"> 
+                    <div class="item-menu-estatistica">
+                        <img src="img/estatisticas/tabela.png" width="40" height="40" class="item-menu-times-img" />
+                        <span class="item-menu-times-span">Tabela de Classifica&ccedil;&atilde;o</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+                <a href="rel-tabela-resultado-jogos.html"> 
+                    <div class="item-menu-estatistica">
+                        <img src="img/estatisticas/tabela.png" width="40" height="40" class="item-menu-times-img" />
+                        <span class="item-menu-times-span">Resultado Jogos</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+                
+
+                <a href="rel-tabela-artilheiros.html"> 
+                    <div class="item-menu-estatistica">
+                        <img src="img/estatisticas/artilheiro.png" width="40" height="40" class="item-menu-times-img"  />
+                        <span class="item-menu-times-span">Artilheiros</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+
+                <a href="rel-tabela-times-menos-vazados.html"> 
+                    <div class="item-menu-estatistica">
+                        <img src="img/estatisticas/saldo-gols.png" width="40" height="40" class="item-menu-times-img"  />
+                        <span class="item-menu-times-span"> Times menos vazados</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+                <!-- 
+                <a href="consulta-eventos.html"> 
+                    <div class="item-menu-estatistica">
+                        <img src="img/estatisticas/ranking.png" width="40" height="40" class="item-menu-times-img"  />
+                        <span class="item-menu-times-span"> Ranking dos Times</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+                 -->
+                <a href="rel-tabela-cartoes.html"> 
+                    <div class="item-menu-estatistica">
+                        <img src="img/estatisticas/cartoes.png" width="40" height="40" class="item-menu-times-img"  />
+                        <span class="item-menu-times-span"> Cart&otilde;es</span>
+                        <span class="seta-ir2">  > </span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+    </body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+		<script type="text/javascript" src="cordova.js"></script>
+		
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+		
+		
+        <script>
+	        var db = null;
+	        var vid = sessionStorage.getItem('vId');	
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+	        var vcodjog=0;
+	        var vcodtim =0;
+	    	function onLoad() {
+	    		validaData('i','#dnasc');
+            	
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		
+	    		db.transaction(fc_carrega, errorCB);
+	    		
+	    		if(vid != 'null'){
+	    			db.transaction(editarEvento, errorCB);
+	    			$('.adicionar').css('display','inline');
+	    		}
+	    		
+	    		
+	    	}
+	    	
+	    	function fc_carrega(tx){
+	    		tx.executeSql('select * from tbl_time  order by destim', [], sucessCarregaTime, errorCB);
+	    		
+	    	}
+	    	
+	    	function sucessCarregaTime(tx, results){	    		
+	    		var htm = '';
+	    		for(var i =0; i< results.rows.length; i++){
+	    			htm += '<option value="'+ results.rows.item(i).codtim +'">' + results.rows.item(i).destim + '</option>';
+	    		}
+	    		
+	    		$('#carrega_tim').html(htm);
+	    	}
+	    	
+	    	
+	    	
+	    	function editarEvento(tx){
+	    		var sql = 'select a.desjog, a.apelido, a.nro, e.codtim, b.destim, c.despos ' +
+	    		' from tbl_jogador a ' +
+	    		' inner join tbl_posicao c on a.codpos = c.codpos ' +
+	    		' left join tbl_jogador_time e on e.codeve='+vcodeve+' and a.codjog = e.codjog '+ 
+	    		' left join tbl_time         b on e.codtim = b.codtim '+	    		
+	    		' where a.codjog = ' + vid ;
+	    		
+	    		tx.executeSql(sql, [], successEditar, errorCB);
+	    	}
+        	
+	    	function successEditar(tx, results){
+	    		 $('#desjog').val(results.rows.item(0).desjog);
+            	 $('#apelido').val(results.rows.item(0).apelido);
+            	 $('#carrega_tim').val(results.rows.item(0).codtim);
+            	
+	    	}
+	    	
+
+            /**
+             * FUNCAO AVANCAR E VOLTAR CADSATRO DE EVENTO
+             */
+            function fc_salva_valida() {
+            	var ok = true;
+            	var txt = '';
+            	
+            	var path = $('#file-foto').val();
+             	vcodtim = $('#carrega_tim').val();
+            	if(vcodtim == '' || vcodtim == null){
+            		ok = false;
+            		txt += 'Preencha o campo time! \n';
+            	}
+            	if(ok){
+            		db.transaction(fc_verifica_jogador_time, errorCB);
+            	}else{
+            		alert(txt);
+            		return;
+            	}
+            }
+            
+            function fc_verifica_jogador_time(tx) {
+            	vcodjog=vid;
+            	tx.executeSql('select codtim from tbl_jogador_time  where codeve='+vcodeve+' and codjog = ' +vcodjog, [], sucessverifica_jogador_time, errorCB);            	
+            }
+            
+            function sucessverifica_jogador_time(tx, results){ 
+            	var sql = '';
+            	
+            	if (results.rows.length==0) {
+            		sql = "insert into tbl_jogador_time(codjog, codeve, codtim, grutel,enviado)" + 
+          		  " values ("+vcodjog+"," +vcodeve+","+vcodtim+"," + vgrutel+ ",0)";
+            		
+            	} else {
+            		sql = "update tbl_jogador_time set enviado=0, codtim =  "+vcodtim+" where codeve="+vcodeve+" and codjog = " +vcodjog;
+            	}
+            	
+            	tx.executeSql(sql, [], successJogadorTime, errorCB);
+	    		 
+	    	}
+            
+            function successJogadorTime() {
+					fc_link('consulta-jogadores.html');        		
+            }
+            
+            
+            function deletar_evento(){
+            	if(vid != 'null'){
+            		navigator.notification.confirm(
+            		"Deseja, realmente, excluir jogador do Evento?",
+            		fc_choice,
+            		"Excluir evento",
+            		["Sim","Não"]
+            		);
+            		
+            		//db.transaction(fc_deletar_ev, errorCB);
+            	}
+            }
+            
+            function fc_choice(btn){
+            	if(btn == 1){db.transaction(fc_deletar_ev, errorCB);}
+            	if(btn == 2){return;}
+            	
+            }
+            
+            function fc_deletar_ev(tx){
+            	tx.executeSql('delete from tbl_jogador_time where  codeve='+vcodeve+' and  codjog =' + vid, [], successDelete, errorCB);
+            	
+            }
+            
+            function successDelete(){
+            	alert('Jogador excluido do evento com sucesso!');
+            	fc_link('consulta-jogadores.html');
+            }
+            
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna">JOGADOR x TIME</span>
+                <!-- <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                
+                	<span class="adicionar" onclick="deletar_evento()" style="color: #f00; display: none"> - </span>
+               
+            </div> 
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="cad-parte1">
+                <table class="tbl-inserir-evento">
+                <!-- 	<tr>
+                		<td colspan="3"> <input type="file" id="file-foto" value="Foto" /> </td>
+                	</tr>
+                	 -->
+                    <tr>
+                        <td> Nome do jogador</td>
+                    </tr>
+                    <tr> 
+                        <td> <input readonly = "readonly" type="text" id="desjog" class="input-class-cad-evento" placeholder="Toque para inserir o nome do jogador" /> </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Apelido</td>
+                    </tr>
+                    <tr> 
+                        <td> <input readonly = "readonly" type="text" id="apelido" class="input-class-cad-evento" placeholder="Toque para inserir o apelido do jogador" /> </td>
+                    </tr>
+                    
+                   
+                    <tr>
+                        <td>Time</td>
+                    </tr>
+                    <tr> 
+                        <td>
+                        	<select id="carrega_tim" class="carrega-select">
+                        		
+                        	</select>
+                        </td>
+                    </tr>
+                    
+                   
+                </table>
+
+                
+                <div class="padrao-btn" onclick="fc_salva_valida()" > Salvar</div>
+            </div>
+            
+            <div class="clear"> </div>
+        </div>
+        
+         <footer class="rodape-fixo" id="footer1" >
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 5px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 5px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+    </body>
+</html>

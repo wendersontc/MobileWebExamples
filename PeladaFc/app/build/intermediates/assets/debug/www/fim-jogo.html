@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/jquery.js" ></script>       
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+        <script>
+        var db = null;
+        
+        var atime1 = new Array();
+        var atime2 = new Array();
+        var vct1=0;vct2=0;
+        var vcodeve = localStorage.getItem('codeve');
+        var vdeseve = localStorage.getItem('deseve');
+        var vgrutel    = localStorage.getItem('grutel');
+        var vtempo = sessionStorage.getItem('vtempo');
+        var vtempo_min = sessionStorage.getItem('vtempo_min');
+        var vid = sessionStorage.getItem('vId');
+        var vcodtim1 = 0;
+        var vdestim1 ='';
+        var vcodtim2 = 0;
+        var vdestim2 = ''
+        var vcodtim  = 0;
+        var vdestim  = '';
+        var vcodjog  = 0;
+        var vapelido='';
+        var vnro    =0;
+        var vcodcao  = 0;
+        var vama=0,vazu=0,vver=0, vitem;
+        var vacao=0;
+        
+        
+        
+        function onLoad() {
+    		document.addEventListener("deviceready", onDeviceReady, false);
+    	}
+
+    	function onDeviceReady() {
+    		document.addEventListener("backbutton", onBackKeyDown, false);
+    		
+    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+    		db.transaction(carregaResultado, errorCB);	
+    		atualiza_notificacoes();
+    	}
+    	
+    	function carregaResultado(tx){
+    		
+    		
+    	    $('#descricao_tempo_jogo').text("JOGO N."+vid);
+    	    
+    	    
+    		var sql = 'select a.*, l.desloc, t1.destim as time1, t2.destim as time2, t1.sigla as sigla1, t2.sigla as sigla2, ' +  
+    		' e.hora_inicial as e_hr_inicial, e.hora_inicial as e_hr_final, e.primeiro_tempo_min, e.interval_min,e.segundo_tempo_min, ' +
+    		' e.pontos_vitoria, e.pontos_empate,e.tempo_cartao_azul,e.comentario_tela_inicio, e.comentario_tela_final, ' +
+    		' j.desjuiz ' +
+    		' from tbl_jogos a  inner join tbl_time t1 on a.codtim1 = t1.codtim ' +
+    		' inner join tbl_time t2 on a.codtim2 = t2.codtim ' +
+    		' inner join tbl_evento e on a.codeve = e.codeve ' +
+    		' left join  tbl_local l on a.codloc  = l.codloc ' +
+    		' left join  tbl_juiz j on a.codjuiz  = j.codjuiz ' +
+    		' where a.codeve=' + vcodeve + 
+    		' and a.id_jogo='+ vid + ' order by a.date desc ' ;
+    		tx.executeSql(sql, [], successResultado, errorCB);
+    	}
+    	
+    	function successResultado(tx, results){
+                	    		
+    	    if (results.rows.item(0).hora_inicial_real=='' || results.rows.item(0).hora_inicial_real ==null) {
+    	    	var sql = 'update tbl_jogos set enviado=0, hora_inicial_real = "' + pegaHorMinSeg()+'" ';
+     	        sql += ' where id_jogo =' + vid + ' and codeve =' + vcodeve;         	 
+     	        tx.executeSql(sql);   	
+     	        
+     	       if (vgrutel != 0){
+               		fazSomenteQueChamar=1;
+           			vsql ='';
+       				fc_trans_jogos();
+       		   }
+     	        
+    	    }	
+    		
+    		 vcodtim1 = results.rows.item(0).codtim1;
+    		 vcodtim2 = results.rows.item(0).codtim2;
+    		 
+    		 $('#codtime1').attr('src', 'file:///mnt/sdcard/peladaFC/time_'+ vcodtim1 + '.jpg');
+	    	 $('#codtime2').attr('src', 'file:///mnt/sdcard/peladaFC/time_'+ vcodtim2 + '.jpg');
+    		 
+    		 vdestim1 =results.rows.item(0).time1;
+    		 vdestim2 =results.rows.item(0).time2;
+    		 
+    		 $('#time1').text(results.rows.item(0).sigla1);
+       	     $('#time2').text(results.rows.item(0).sigla2);
+       	     
+       	     if (vtempo==1 || vtempo==2 ){
+       	    	$('#periodo_jogo').text(vtempo + 'º.Tempo');           	    	
+       	     }
+       	     
+       	    $('#gol1').text(results.rows.item(0).gol1);
+    	    $('#gol2').text(results.rows.item(0).gol2);
+    	    
+    	    $('#1tr').text(results.rows.item(0).primeiro_tempo_real);
+    	    $('#1tc').text(results.rows.item(0).primeiro_tempo);
+    	    
+    	    $('#itr').text(results.rows.item(0).intervalo_real);
+    	    $('#itc').text(results.rows.item(0).intervalo);
+    	    
+    	    $('#2tr').text(results.rows.item(0).segundo_tempo_real);
+    	    $('#2tc').text(results.rows.item(0).segundo_tempo);
+    	    
+    	    $('#nomeJuiz').text(results.rows.item(0).desjuiz);
+    	    
+    	    
+       	  
+       	    //atualiza_notificacoes();
+       	    //iniciarCronometro();
+       	 
+    	}
+    	
+    	
+    	
+    	
+    	
+    	
+    	/**
+    		NOTIFICACOES
+    	**/
+    	
+    	
+    	function atualiza_notificacoes() {
+   		 
+    		db.transaction(editarNotificacoes, errorCB);	    		
+    	}
+    	
+    	function editarNotificacoes(tx){
+    		
+    		var sql = 'select a.codtim1, a.codtim2, (select count(*) as tgl1 from tbl_jogos_acao b ' +
+    	    ' where b.id_jogo = a.id_jogo and b.codtim=a.codtim1 and codcao=1 ) as tgl1, ' +
+    		   	            ' (select count(*) as tgl2 from tbl_jogos_acao c ' +
+    	    ' where c.id_jogo = a.id_jogo and c.codtim=a.codtim2 and codcao=1 ) as tgl2 ' +
+    		
+    		' from tbl_jogos a ' +
+    		' where a.codeve=' + vcodeve + 
+    		' and a.id_jogo='+ vid + '  ' ;
+    		
+    		
+    		tx.executeSql(sql, [], successNotificacoes, errorCB);
+
+    		
+    	}
+    	
+        
+        
+        function successNotificacoes(tx, results){
+    		
+    		
+    		
+    		$('#gol1').text(results.rows.item(0).tgl1);
+      	    $('#gol2').text(results.rows.item(0).tgl2);
+      	    
+        	  db.transaction(ProcuraTime1, errorCB);
+    		
+    		
+    		  	  
+       	     
+    	}
+    	
+    	
+		function ProcuraTime1(tx){
+    		
+    		var sql = 'select codjog,desjog,apelido,nro, sum(gol) as gol, sum(azu) as azu,sum(ama) as ama, sum(ver) as ver  from (select a.codjog,j.desjog,j.apelido,j.nro,'+
+    		          'case when codcao=1 then 1 else 0 end as gol, ' +
+    		          'case when codcao=2 then 1 else 0 end as azu, ' +
+    		          'case when codcao=3 then 1 else 0 end as ama, ' +
+    		          'case when codcao=4 then 1 else 0 end as ver ' +
+    		' from tbl_jogos_acao a '+
+    		' inner join tbl_jogador j on a.codjog=j.codjog ' +
+    		' where a.id_jogo='+ vid + ' and a.codtim= ' + vcodtim1 + '  ) t group by codjog,desjog,apelido,nro ';	    		
+    		
+    		tx.executeSql(sql, [], successProcuraTime1, errorCB);
+    		
+    		
+    		
+    	}
+        
+        function successProcuraTime1(tx, results){
+        	
+        	 vct1 = results.rows.length;
+        	 for (var i = 0; i < results.rows.length; i++) {
+        		 atime1[i] = '';
+        		           	
+        		 atime1[i]  += '<img src="file:///mnt/sdcard/peladaFC/jog_'+results.rows.item(i).codjog+'.jpg" width="40" height="40" class="item-noti-img-jogador" />';
+        		 atime1[i]  += '<span class="item-noti-apelido-jogador"> ' +results.rows.item(i).apelido+ ' </span>';
+        		 atime1[i]  += '<span class="item-noti-numero-jogador"> '+ results.rows.item(i).nro +' </span>';
+        		 atime1[i]  += '<span class="item-noti-gols-jogador">  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 1px;" >' + results.rows.item(i).gol + '</span>  </span>';
+     			 if (results.rows.item(i).ama==0){
+     			 	 atime1[i]  += '<div class="item-noti-cartao-amarelo-jogador inclinar cartao-off">  </div>';	
+     		 	 } else {
+     				 atime1[i]  += '<div class="item-noti-cartao-amarelo-jogador inclinar"> ' + results.rows.item(i).ama + ' </div>';
+     			 }
+     		 	 if (results.rows.item(i).ver==0){
+     				 atime1[i]  += '<div class="item-noti-cartao-vermelho-jogador inclinar cartao-off">  </div>';	
+     			 } else {
+     				 atime1[i]  += '<div class="item-noti-cartao-vermelho-jogador inclinar"> ' + results.rows.item(i).ver + ' </div>';
+     			 }
+     			 if (results.rows.item(i).azu==0){
+     				 atime1[i]  += '<div class="item-noti-cartao-azul-jogador inclinar cartao-off">  </div>';	
+     			 } else {
+     				 atime1[i]  += '<div class="item-noti-cartao-azul-jogador inclinar"> ' + results.rows.item(i).azu + ' </div>';
+     			 }
+     			
+             }
+        	 db.transaction(ProcuraTime2, errorCB);	 
+        }
+        
+       
+        function ProcuraTime2(tx){
+    		
+
+        	var sql = 'select codjog,desjog,apelido,nro, sum(gol) as gol, sum(azu) as azu,sum(ama) as ama, sum(ver) as ver  from (select a.codjog,j.desjog,j.apelido,j.nro,'+
+	          'case when codcao=1 then 1 else 0 end as gol, ' +
+	          'case when codcao=2 then 1 else 0 end as azu, ' +
+	          'case when codcao=3 then 1 else 0 end as ama, ' +
+	          'case when codcao=4 then 1 else 0 end as ver ' +
+			  ' from tbl_jogos_acao a '+
+			  ' inner join tbl_jogador j on a.codjog=j.codjog ' +
+			  ' where a.id_jogo='+ vid + ' and a.codtim= ' + vcodtim2 + '    ) t  group by codjog,desjog,apelido,nro ';	 	 		
+    		
+    		tx.executeSql(sql, [], successProcuraTime2, errorCB);
+    		
+    		
+    	}
+    	
+       
+       function successProcuraTime2(tx, results){
+    	   vct2 = results.rows.length;
+       	 for (var i = 0; i < results.rows.length; i++) {
+       		 atime2[i] = '';
+       		                 	
+       		 
+       		 atime2[i] += '<img src="file:///mnt/sdcard/peladaFC/jog_'+results.rows.item(i).codjog+'.jpg" width="40" height="40" class="item-noti-img-jogador2" />';
+       		 atime2[i] += '<span class="item-noti-apelido-jogador2" > ' +results.rows.item(i).apelido+ ' </span>';
+       		 atime2[i] += '<span class="item-noti-numero-jogador2" > '+ results.rows.item(i).nro +' </span>';
+       		 atime2[i] += '<span class="item-noti-gols-jogador2" >  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 1px;" > ' + results.rows.item(i).gol + ' </span>  </span>';
+			 if (results.rows.item(i).ama==0){
+				atime2[i] += '<div class="item-noti-cartao-amarelo-jogador2 inclinar cartao-off">  </div>';	
+			 } else {                		
+				atime2[i] += '<div class="item-noti-cartao-amarelo-jogador2 inclinar"> ' + results.rows.item(i).ama + ' </div>';
+			 }
+			 if (results.rows.item(i).ver==0){
+		 		atime2[i] += '<div class="item-noti-cartao-vermelho-jogador2 inclinar cartao-off">  </div>';	
+	 		 } else {
+				atime2[i] += '<div class="item-noti-cartao-vermelho-jogador2 inclinar"> ' + results.rows.item(i).ver + ' </div>';
+			 }
+			 if (results.rows.item(i).azu==0){
+				atime2[i] += '<div class="item-noti-cartao-azul-jogador2 inclinar cartao-off">  </div>';	
+			 } else {
+				atime2[i] += '<div class="item-noti-cartao-azul-jogador2 inclinar"> ' + results.rows.item(i).azu + ' </div>';                		
+			 }
+    			
+            
+       	 }
+       	 
+       	var htm = '<div class="n-item">';
+        var ct_maior=vct1;
+        if (vct2>vct1){
+        	ct_maior=vct2;                	
+        }
+         
+        for (var i = 0; i < ct_maior; i++) {
+        	
+          	htm += '<div class="item-notificacoes" style="" >';
+        	if (i<=vct1){
+        		htm +=	atime1[i];                        
+        	}
+        	htm += '</div>';
+         	
+         
+        	htm += '<div class="item-notificacoes">';
+        	if (i<=vct2){
+        		htm +=	atime2[i];                        
+        	}
+        	htm += '</div>';           
+        	
+        	
+        }
+        
+        
+        
+        
+        
+        
+        htm += '</div>';
+        
+        htm += '<div class="clear"> </div>';
+        $('#notificacoes-jogo').html(htm);
+       }
+       
+       function ShowHideResumo(param){
+    	   if(param){
+    		   $('#divResultadoFinal').css('display', 'none');
+    		   $('#div-resumo').css('display', 'inline');
+    	   }else{
+    		   $('#divResultadoFinal').css('display', 'inline');
+    		   $('#div-resumo').css('display', 'none');
+    	   }
+       }
+       
+       function onBackKeyDown(){
+    	   ShowHideResumo(false);
+       }
+
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+                
+            <div id="menu-topo1">
+                <img src="img/ic-menu/jogos.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                
+                <span class="titulo-interna"> JOGO ENCERRADO</span>                
+            </div> 
+                
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="divResultadoFinal" style="display: inline;"> 
+            <h4 style="color: #5B5B5E; width: 100%; font-size: 20px; text-align: center; margin-top: -28px;"> Resultado Final </h4>
+            <div class="item-jogos" style="border: 0;">
+                <div class="foto-time">
+                    <img src="" width="70" height="70" id="codtime1" /><br/>
+                    <span id="time1">  </span>
+                </div>
+
+                <div class="jogo-placar">
+                    <div class="jogo-placar-valor">
+                        <span class="jogos-gols-andamento" id="gol1"> </span>  <span class="jogos-x">x</span>  <span class="jogos-gols-andamento"  id="gol2" ></span>
+                    </div>
+                </div>
+
+                <div class="foto-time">
+                    <img src="" width="70" height="70" id="codtime2" /><br/>
+                    <span id="time2">  </span>
+                </div>
+            </div>
+
+            <div id="tempo-do-jogo" style="margin-top: 10px;"> 
+                <div id="descricao_tempo_jogo"  style="width: 190px; text-align: center; color: #fff; font-size: 16px; background: #00923D; margin: 0px auto; border: 2px solid #ccc; border-radius: 7px 7px 0px 0px;"> TEMPO DE JOGO </div>
+            </div>
+
+			<style>
+				#tempo-jogo-fim tbody{
+					font-size: 17px;
+				}
+				#tempo-jogo-fim tr td{
+					padding: 2px 5px 2px 5px;
+				}
+			</style>
+
+            <table id="tempo-jogo-fim" style="font-size: 19px;" >
+	            <thead>
+	            	<tr>
+	            		<th style="color: #5B5B5F">Tempo</th>
+	            		<th style="color: #5B5B5F">Real</th>
+	            		<th style="color: #5B5B5F">Corrido</th>
+	            	</tr>
+	            </thead>
+	            <tbody>
+	                <tr>
+	                	<td style="color: #6D9B35"> Primeiro</td>
+	                    <td style="color: #5B5B5F" id="1tr"> 32:00</td>
+	                    <td style="color: #5B5B5F" id="1tc"> 30:00</td>
+	                </tr>
+	                <tr>
+	                    <td style="color: #6D9B35"> Intervalo</td>
+	                    <td style="color: #5B5B5F" id="itr"> 15:00</td>
+	                    <td style="color: #5B5B5F" id="itc"> 30:00</td>
+	                </tr>
+	                <tr>
+	                    <td style="color: #6D9B35"> Segundo</td>
+	                    <td style="color: #5B5B5F"  id="2tr"> 32:00</td>
+	                    <td style="color: #5B5B5F"  id="2tc"> 30:00</td>
+	                </tr>
+	                
+	                <tr>
+	                    <td style="color: #6D9B35"> Juiz</td>
+	                    <td style="color: #5B5B5F"  id="nomeJuiz" colspan="2"> </td>
+	                </tr>
+	            </tbody>
+            </table>
+            
+            <br/>
+            
+            <div class="padrao-btn" style="width: 35%; background: #469325; float: right; font-size: 18px;" onclick="fc_link('jogos.html')"> NOVO JOGO</div>
+            <div class="padrao-btn" style="width: 35%; background: #006EB2; float: left;  font-size: 18px;" onclick="ShowHideResumo(true)"> RESUMO</div>
+			</div>
+			
+			<div id="div-resumo" style="display: none;">
+				<div id="notificacoes-jogo"> 
+                	<div class="clear"> </div>
+            	</div>
+			</div>
+			
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+    </body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PeladaFC</title>
+<meta charset="windows-1252">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+<script type="text/javascript" src="cordova.js"></script>  
+
+<script>
+	var db = null;
+	var vcodeve =  0;
+	
+	localStorage.setItem('PathServidorImagem', 'http://iatecamprojeto.no-ip.org:2424/GerenciadorFotosPeladaFC/upload/');
+	
+	function onLoad() {
+		document.addEventListener("deviceready", onDeviceReady, false);
+		vcodeve    = localStorage.getItem('codeve');
+	}
+
+	function onDeviceReady() {
+		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+		db.transaction(createStructs, errorCB, successCB);
+	
+    	//db.transaction(createPadrao, errorCB, successCB);
+	}
+
+	function createStructs(tx) {
+		
+		
+		
+		var vsql = 'CREATE TABLE IF NOT EXISTS [tbl_config] ('
+				+ '[codeve_atual] INTEGER,'
+				+ '[desgru]               VARCHAR(50) NULL,'
+				+ '[senha_adm]                VARCHAR(20)  NULL,'
+				+ '[senha_con]                VARCHAR(20)  NULL,'
+				+ '[email]                    VARCHAR(100)  NULL,'			
+				+ '[telefone]                VARCHAR(30)  NULL,'
+				+ '[atualizar]    INTEGER NULL, '
+				+ '[grutel]      INTEGER NULL '+	')';
+		
+	//	vsql='alter table tbl_config add column grutel integer null';
+	
+
+        
+		tx.executeSql(vsql);
+		console.log(vsql);
+		
+			
+	//	console.log(vsql);
+		
+		
+		
+		//Somente do servidor
+
+//			vsql = 'CREATE TABLE IF NOT EXISTS [tbl_grupo] ('
+//				+ '[grutel]               INTEGER PRIMARY KEY AUTOINCREMENT,'
+//				+ '[desgru]               VARCHAR(50) NULL,'
+//				+ '[senha_adm]                VARCHAR(20)  NULL,'
+//				+ '[senha_con]                VARCHAR(20)  NULL,'
+//				+ '[email]                    VARCHAR(100)  NULL,'			
+//				+ '[telefone]                VARCHAR(30)  NULL,'
+//				+ '[atualizar]               INTEGER NULL,'
+//				+ '[datenv]               DATE    NULL,'
+//				+ '[enviado]              INTEGER NULL '
+//				+ ')';
+		 // tx.executeSql(vsql);
+		 
+		
+		
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_posicao] ('
+				+ '[codpos]               INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[despos]               VARCHAR(50) NULL,'
+				+ '[codeve]               INTEGER NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL '
+				+ ')';
+		
+		//vsql='update tbl_jogos set date="05/07/2014" where date="07/07/2014"';
+		
+		tx.executeSql(vsql);
+		
+		
+		
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_local] ('
+				+ '[codloc]               INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[desloc]               VARCHAR(50) NULL,'
+				+ '[codeve]               INTEGER NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL '
+				+ ')';
+		
+		//vsql='delete from tbl_jogador_time where codeve=34';
+		//vsql='delete from tbl_jogos_acao where codeve is null';
+		tx.executeSql(vsql);
+		
+		
+
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_juiz] ('
+				+ '[codjuiz]               INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[desjuiz]               VARCHAR(50) NULL,'
+				+ '[codeve]               INTEGER NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL '
+				+ ')';
+		//vsql='alter table tbl_juiz add column enviado integer null';
+		
+		tx.executeSql(vsql);
+		
+	
+
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_time] ('
+				+ '[codtim]               INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[destim]               VARCHAR(50) NULL,'
+				+ '[sigla]                VARCHAR(5)  NULL,' 
+				+ '[codeve]               INTEGER NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL '
+				+ ')';
+		
+	//	vsql='alter table tbl_time add column grutel integer null';
+		tx.executeSql(vsql);
+	      
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_jogador] ('
+				+ '[codjog]               INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[desjog]               VARCHAR(50) NULL,'
+				+ '[apelido]              VARCHAR(18) NULL,'
+				+ '[codpos]               integer NULL,'
+				+ '[codtim]               integer NULL,'
+				+ '[dnasc]                Date NULL,'
+				+ '[RG]                   VARCHAR(11) NULL,'
+				+ '[telefone]             VARCHAR(15) NULL,'
+				+ '[nro]               INTEGER NULL,'
+				+ '[codeve]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL,'
+				+ '[grutel]               INTEGER NULL ' + ')';
+		
+		tx.executeSql(vsql);
+		
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_jogador_time] ('
+			+ '[codeve]               INTEGER ,'
+			+ '[codjog]               INTEGER ,'
+			+ '[codtim]               integer ,'
+			+ '[datenv]               DATE    NULL,'
+			+ '[enviado]              INTEGER NULL,'
+			+ '[grutel]               INTEGER NULL,'
+		    + ' PRIMARY KEY (codeve, codtim, codjog) ' + ')';
+	
+	//vsql='delete from tbl_jogador_time where codeve=32 ';
+	tx.executeSql(vsql);
+		
+	
+		
+	
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_evento] ('
+				+ '[codeve]                         INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[deseve]                         VARCHAR(50) NULL,'
+				+ '[dcad]                           Date NULL,'
+				+ '[hora_inicial]                   varchar(10) NULL,'
+				+ '[hora_final]                     varchar(10) NULL,'
+				+ '[primeiro_tempo_min]              numeric null,'
+				+ '[interval_min]                    numeric null,'
+				+ '[segundo_tempo_min]               numeric null,'
+				+ '[pontos_vitoria]                  integer NULL,'
+				+ '[pontos_empate]                   integer NULL,'
+				+ '[tempo_cartao_azul]               integer NULL,'
+				+ '[comentario_tela_inicio]          text NULL,'
+				+ '[comentario_tela_final]          text NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL '
+				+ ')';
+		
+	//	vsql='alter table tbl_evento add column grutel integer null';
+		tx.executeSql(vsql);
+		
+		
+	
+		
+
+		
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_jogos] ('
+				+ '[id_jogo]              INTEGER PRIMARY KEY AUTOINCREMENT,'
+				+ '[codeve]               integer NULL,'
+				+ '[codtim1]              integer NULL,'
+				+ '[codtim2]              integer NULL,'
+				+ '[date]                 Date NULL,'
+				+ '[hora_inicial]         varchar(10) NULL,'
+				+ '[hora_inicial_real]    varchar(10) NULL,'
+				+ '[hora_final]           varchar(10) NULL,'
+				+ '[primeiro_tempo]       varchar(10) NULL,'
+				+ '[primeiro_tempo_real]  varchar(10) NULL,'
+				+ '[primeiro_encerrado]   integer NULL,'
+				+ '[intervalo]            varchar(10) NULL,'
+				+ '[intervalo_real]       varchar(10) NULL,'
+				+ '[intervalo_encerrado]       integer NULL,'
+				+ '[segundo_tempo]        varchar(10) NULL,'
+				+ '[segundo_tempo_real]   varchar(10) NULL,'
+				+ '[segundo_encerrado]   integer NULL,'
+				+ '[codjuiz]              integer NULL,'
+				+ '[codloc]               integer NULL,'
+				+ '[encerrado]            integer NULL,'
+				+ '[gol1]                 integer NULL,'
+				+ '[gol2]                 integer NULL,'
+				+ '[ponto1]                 integer NULL,'
+				+ '[ponto2]                 integer NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL ' + ')';
+		
+	//	vsql='alter table tbl_jogos add column intervalo integer null';
+		tx.executeSql(vsql);
+	
+		
+		
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_jogos_acao] ('
+				+ '[id_jogo]              integer null,'
+				+ '[codtim]               integer null,'
+				+ '[codjog]               integer null,'
+				+ '[codcao]               integer null,'
+				+ '[hora_acao]            VARCHAR(10) NULL,'
+				+ '[hora_retorno]         VARCHAR(10) NULL,'				
+				+ '[azul_retorno]         integer NULL,'
+				+ '[periodo_jogo]         integer NULL,'
+				+ '[id_jogo_cumprido]      integer NULL,'
+				+ '[grutel]               INTEGER NULL,'
+				+ '[codeve]              INTEGER NULL,'
+				+ '[datenv]               DATE    NULL,'
+				+ '[enviado]              INTEGER NULL,'
+				+ 'PRIMARY KEY (id_jogo, codtim, codjog, codcao, hora_acao) ' + ')';
+		
+	  //  vsql='alter table tbl_jogos_acao add column codeve integer null';
+		tx.executeSql(vsql);
+		
+		
+		
+		
+		vsql = 'CREATE TABLE IF NOT EXISTS [tbl_jogos_vermelho] ('
+			+ '[codeve]               integer NULL,'
+			+ '[codjog]               integer null,'
+			+ '[id_jogo]              integer null,'
+			+ '[aberto]                integer NULL,'				
+			+ '[grutel]               INTEGER NULL,'
+			+ '[datenv]               DATE    NULL,'
+			+ '[enviado]              INTEGER NULL,'
+			+ 'PRIMARY KEY (codeve,id_jogo, codjog) '	 + ')';
+		
+	//	vsql='alter table tbl_jogos_vermelho add column grutel integer null';
+	tx.executeSql(vsql);
+
+
+
+	
+	}
+	
+	
+
+  
+
+    
+	function createPadrao(tx) {
+		var sql = 'select codjog, desjog ' +
+		   ' from  tbl_jogador  ' +
+	       ' order by desjog  ';
+		
+	///alert(sql);
+		tx.executeSql(sql, [], successLista, errorCB);
+		
+	}
+	
+	
+	function successLista(tx, results){
+		var idev ='';
+		var qtd_linhas = results.rows.length;
+		var nome_jog = '',nome_ant = '', vcodjog=0, vcodant=0;
+		var sql = 'delete from tbl_jogador_time';
+		tx.executeSql(sql);
+		console.log(sql);
+		nome_ant = '';
+		for(var i=0; i< qtd_linhas; i++){			
+			vcodjog = results.rows.item(i).codjog;
+			nome_jog = results.rows.item(i).desjog;
+			if (nome_ant!=nome_jog){
+				vcodant = vcodjog;
+				nome_ant=nome_jog;
+			} else {
+				sql = 'update tbl_jogos_acao     set codjog = ' + vcodant + ' where codjog = '+ vcodjog;
+				tx.executeSql(sql);
+				console.log(sql);
+				sql = 'update tbl_jogos_vermelho set codjog = ' + vcodant + ' where codjog = '+ vcodjog;
+				tx.executeSql(sql);
+				console.log(sql);
+				sql = 'delete from tbl_jogador where codjog = '+ vcodjog;
+				tx.executeSql(sql);
+				console.log(sql);
+				
+			}
+				
+		
+		}	
+		
+		sql='insert into tbl_jogador_time (codeve, codtim, codjog, grutel )  select b.codeve,a.codtim, a.codjog, a.grutel from tbl_jogador a , tbl_evento b  ';
+		tx.executeSql(sql);
+		
+		console.log(sql);
+	}
+	
+	 function errorCB(err) {
+		 console.log('Erro de processamento SQL: ' + err.code);
+     }
+     function successCB() {
+     	console.log('Banco de dados criado/aberto com sucesso!');
+     	//1 db.transaction(queryDB, errorCB);
+     }
+</script>
+</head>
+<body onload="onLoad()">
+	<img src="img/logo-index.png" alt="logomarca" id="logo-index" />
+    
+	<a href="menu.html"> <img src="img/btn-iniciar.png"
+		id="btn-iniciar" alt="iniciar" />
+	</a>
+	 
+</body>
+</html>

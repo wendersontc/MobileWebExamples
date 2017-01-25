@@ -1,0 +1,1267 @@
+*{
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	 -o-tap-highlight-color: rgba(0,0,0,0);
+	 -moztap-highlight-color: rgba(0,0,0,0);
+	 -ms-tap-highlight-color: rgba(0,0,0,0);
+	 tap-highlight-color: rgba(0,0,0,0);
+    margin: 0px;
+    padding: 0px;
+}
+
+input, input:FOCUS, input:ACTIVE{
+	z-index: 99;
+}
+
+body{
+    width: 100%;
+    height: 100%;
+notificacoes-jogo
+
+    margin: 0px;
+    padding: 0px;
+
+    font-family: Arial, Tahoma;
+}
+
+a{
+    text-decoration: none;
+    color: #fff;
+}
+
+.clear{
+    clear: both;
+}
+
+#menu-topo1{
+    width: 100%;
+    height: 60px;
+
+    background-image: url('../img/barra-bottom.png');
+    background-size: cover;
+    
+    position: fixed;
+    z-index: 999999999;
+}
+
+.logo-interna{
+    float: left;
+    margin-top: 7px;
+    margin-left: 10px;
+}
+
+.titulo-interna{
+    float: left;
+    margin-top: 20px;
+    margin-left: 15px;
+
+    font-size: 20px;
+    color: #fff;
+}
+
+#container-ic-interna{
+    width: 96%;
+    height: 90px;
+    margin: 0px;
+    padding: 0px;
+
+    margin: 0px auto;
+
+    background: transparent;
+    
+
+    font-size: 26px;
+    color: #fff;
+    
+    position: relative;
+    top: 60px;
+  
+}
+
+
+
+#container-ic-interna-cadastro-jogador{
+    width: 96%;
+    height: 80px;
+    margin: 0px;
+    padding: 0px;
+
+    margin: 0px auto;
+
+    background: transparent;
+    z-index:30;
+
+    font-size: 26px;
+    color: #000;
+    
+    position: relative;
+    top: 120px;
+    
+}
+
+
+
+#container-resultado-jogos{
+    width: 100%;
+    height: 50px;
+    margin: 0px;
+    padding: 0px;
+
+    margin: 0px auto;
+
+    background: transparent;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    color: #000;
+    
+    position: relative;
+    top: 60px;
+}
+
+
+#container-ic-interna-jogador{
+    width: 96%;
+    min-height: 100px;
+    margin: 0px;
+    padding: 0px;
+
+    margin: 0px auto;
+
+    background: transparent;
+
+    font-size: 26px;
+    color: #fff;
+}
+
+#lista{
+    width: 100%;
+    list-style: none;
+    
+    margin: 0px;
+    padding: 0px;
+
+    float: left;
+
+    background: transparent;
+
+    margin-bottom: 80px;
+    
+    
+}
+
+#lista li{
+    width: 100%;
+    border-bottom: 1px solid #D9DADE;
+    
+    font-size: 20px;
+
+    padding: 10px 0px 10px 0px;
+
+    color: #5B5B5F;
+    clear: 	both;
+}
+
+#lista li:last-child{
+    border: 0px;
+}
+
+
+.seta-ir{
+    float: right;
+}
+
+.seta-ir2{
+    float: right;
+    margin: 10px 10px 0px 0px;
+}
+
+.imagem_editar{
+    float: right;
+    margin: 0px 5px 0px 0px;
+}
+
+.imagem_editar2{
+    float: right;
+    margin: -20px 5px 0px 0px;
+}
+
+.imagem_editar3{
+    float: right;
+    margin: 10px 5px 0px 0px;
+}
+
+#propriedade-menu{
+	width:30px;
+	height: 28px;
+	
+    float: right;
+    margin: 13px 0px 0px 0px;
+}
+
+.adicionar{
+	font-size: 50px;
+	color: #fff;
+	
+	float: right;
+	margin: 0px 10px 0px 0px;
+	
+	cursor: pointer;
+}
+
+
+#escurecer{
+    width: 100%;
+    height: 100%;
+
+    position: absolute;
+    top: 60px;
+    left: 0px;
+
+    background: #000;
+    opacity: .65;
+
+}
+
+
+.text-lista-geral{
+    float: left;
+    margin: 7px 0px 0px 5px;
+    
+    font-size: 22px;
+}
+
+#lista-menu-geral li:last-child{
+    border:0;
+}
+
+.input-filtro{
+    width: 60%;
+    height: 25px;
+    padding: 0px;
+
+    border: 1px solid #529D26;
+}
+
+
+.input-class-cad-evento{
+    width: 80%;
+    padding: 5px;
+
+    border: 1px solid #529D26;
+}
+
+input-placeholder { 
+    color: #9A999D;
+    font-size: 16px;
+}
+
+::-webkit-input-placeholder { /* WebKit browsers */
+    color: #9A999D;
+    font-size: 16px;
+}
+
+.tbl-inserir-evento{
+    width: 100%;
+    font-size: 18px;
+    color: #5B5B5E;
+}
+
+.padrao-btn{
+    width: 200px;
+    height: 25px;
+
+    background: #64A824;
+    color: #fff;
+
+    padding: 7px;
+
+    text-align: center;
+
+    font-size: 16px;
+    
+    margin: 0px auto;
+    margin-top: 10px;
+}
+
+
+ 
+.textarea-class{
+    width: 100%;
+    font-size: 18px;
+    color: #5B5B5E;
+}
+
+/**
+** Style ABAS
+*/
+
+#area-das-abas{
+    width: 100%;
+    height: 30px;
+
+    background: transparent;
+    position: fixed;
+    top: 59px;
+}
+
+#jogos-agendados{
+    width: 50%;
+    height: 40px;
+
+    float: left;
+
+    background: #ECEDEF;
+
+    border-bottom: 5px solid #529E27;
+}
+
+#jogos-realizados{
+    width: 50%;
+    height: 40px;
+
+    float: right;
+
+    background: #ECEDEF;
+    border-bottom: 5px solid #ECEDEF;
+}
+
+.tit-aba-on{
+    font-size: 20px;
+    float: left;
+    margin: 10px 0px 0px 25%;
+    color: #5B5B5E;
+}
+
+.tit-aba-off{
+    font-size: 20px;
+    float: left;
+    margin: 10px 0px 0px 25%;
+    color: #9A999D;
+}
+
+.item-jogos{
+    width: 100%;
+    height:80px;
+
+    background: transparent;
+
+    margin-top: 0px;
+
+    border-bottom: 2px solid #ccc;
+    
+    padding: 0px;
+    
+}
+
+.item-jogos:last-child{
+    border-bottom: 0px solid #ccc;
+}
+
+.foto-time{
+    width: 30%;
+    height: 70px;
+
+    background: transparent;
+
+    text-align: center;
+
+  
+  
+    float: left;
+}
+
+.lista-time-img{
+	float: left;	
+	
+}
+
+.lista-time-tit{
+	font-size: 13pt;
+	float: left;
+	margin: 15px 0px 0px 5px;
+}
+
+.jogos-time-escudo{
+	width: 55px;
+	height: 55px;
+	
+	margin-bottom: 0px;
+}
+
+.jogo-placar{
+    width: 40%;
+    height: 70px;
+
+    float: left;
+
+    background: transparent;
+   
+
+    text-align: center;
+    
+    margin-top: -5px;
+}
+
+
+.jogos-gols{
+    font-size: 28px;
+    color: #529D26
+}
+
+.jogos-gols-andamento{
+    font-size: 18px;
+    color: #fff;
+
+    padding: 5px 17px;
+    font-weight: bold;
+    background: #529D26;
+
+    border-radius: 7px;
+}
+
+.jogos-x{
+    font-size: 30px;
+    color: #D9DADE
+}
+
+.jogos-data{
+    font-size: 18px;
+    color: #5A5A5F;
+
+    margin-top: 20px;
+}
+
+.jogos-data2{
+    font-size: 12px;
+    color: #5A5A5F;
+    float:center;
+    margin-top: 10px;
+    clear: both;
+}
+.jogos-hora-inicial{
+    font-size: 18px;
+    color: #5A5A5F;
+    float: center;  
+    margin-top: 0px;
+    clear: both;
+}
+.jogos-local{
+    font-size: 12px;
+    text-align: center;
+    color: #5A5A5F;
+    float: left; 
+    margin-top: 0px;
+    clear: both;
+}
+
+.jogos-mensagem{
+	width: 100%;
+    height: 100%;	
+    font-size: 14px;
+    color: #5A5A5F;
+    float: left; 
+    margin-botton: 25px;
+   
+}
+
+
+
+
+.jogo-placar-valor{
+    margin-top: 18px;
+}
+
+.jogo-placar-data{
+    margin-top: 6px;
+}
+
+.foto-time img{
+    font-size: 12px;
+}
+
+.foto-time span{
+	width:100%;
+    font-size: 14px;
+    color: #529D26;
+    margin-top:-5px;
+    float:left;
+    
+    
+}
+
+#aba-jogos-agendados{
+    margin-bottom: 70px;
+}
+
+#aba-jogos-realizados{
+    margin-bottom: 70px;
+}
+
+
+#descricao-iniciar-jogo{
+    width: 100%;
+    height: 90px;
+
+    background: transparent;
+    
+    
+}
+
+.desc-tit-iniciar-jogo{
+    font-size: 14px;
+    color: #6D9B35;
+    width: 100%;
+    height: 14px;
+    float: left;
+    
+}
+
+.desc-valor-iniciar-jogo{
+    font-size: 16px;
+    color: #5B5B5F;
+    width: 100%;
+    height: 14px;
+    float: left;
+    
+}
+
+#tbl-desc-inicio-jogo{
+    width: 100%;
+        
+    padding: 0px;
+    position: relativ;
+    top:0px;
+    
+}
+
+
+#tempo-do-jogo{
+    width: 100%;
+    height: 22px;
+    
+    border-bottom: 3px solid #D9DADF;
+    text-align: center;
+}
+
+#notificacoes-jogo{
+    width: 100%;
+    height: 300px;
+    max-height: 300px;
+    float: left;
+    overflow-y: auto;
+    
+    margin-bottom: 15px;
+
+    background: transparent;
+}
+
+#notificacoes-jogador{
+    width: 100%;
+    height: 210px;
+    float: left;
+
+    margin-bottom: 210px;
+
+    background: transparent;
+}
+
+.n-item{
+    width: 100%;
+    height: 52px;
+
+    float: left;
+
+    background: transparent;
+    color: #5B5B5F;
+
+    border-bottom: 2px solid #dadada;
+
+    margin: 0px 0px 0px 0px;
+    padding: 0px;
+
+    clear: both;
+}
+
+.item-notificacoes{
+    width: 50%;
+    height: 55px;
+
+    float: left;
+
+    background: transparent;
+}
+
+.item-noti-img-jogador{
+    float: left;
+    margin-top: 5px;
+}
+
+.item-noti-apelido-jogador{
+    float: left;
+    font-size: 14px; 
+    margin: 5px 0px 0px 5px;
+}
+
+.item-noti-gols-jogador{
+    float: left;
+    font-size: 12px;
+    color: #f00;
+    font-weight: bold;
+    clear: both;
+    margin: -17px 0px 0px 64px;
+}
+
+
+.item-noti-img-jogador2{
+    float: right; 
+    margin-top: 5px;
+}
+
+.item-noti-numero-jogador{
+    float: left;
+    font-size: 14px;
+    font-weight: bold;
+    clear: both;
+
+    margin: -18px 0px 0px 45px;
+
+    color: #539E27;
+}
+
+.item-noti-cartao-amarelo-jogador{
+    width: 12px;
+    height: 14px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: yellow;
+
+    margin: -18px 0px 0px 92px;
+    color: #000;
+    font-size: 12px;
+
+}
+
+
+.item-noti-cartao-vermelho-jogador{
+    width: 12px;
+    height: 14px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: red;
+    
+    margin: -18px 0px 0px 109px;
+    
+    color: #000;
+    font-size: 12px;
+    
+}
+
+.cadastro-cartao-vermelho-jogador{
+    width: 13px;
+    height: 15px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: red;
+    
+    margin: -72px 0px 0px 220px;
+    
+    color: #000;
+    font-size: 12px;
+    
+}
+
+.item-noti-cartao-azul-jogador{
+    width: 12px;
+    height: 14px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: blue;
+
+    margin: -18px 0px 0px 126px;
+    color: #fff;
+    font-size: 12px;
+}
+
+.item-noti-apelido-jogador2{
+    float: right;
+    font-size: 14px; 
+    margin: 5px 5px 0px 0px;
+}
+
+.item-noti-gols-jogador2{
+    float: right;
+    font-size: 12px;
+    color: #f00;
+    font-weight: bold;
+    clear: both;
+    margin: -17px 64px 0px 0px;
+}
+
+.item-noti-numero-jogador2{
+    float: right;
+    font-size: 14px;
+    font-weight: bold;
+    clear: both;
+
+    margin: -18px 45px 0px 0px;
+
+    color: #539E27;
+}
+
+.item-noti-cartao-amarelo-jogador2{
+    width: 12px;
+    height: 14px;
+
+    float: right;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: yellow;
+
+    margin: -18px 92px 0px 0px;
+    color: #000;
+    font-size: 12px;
+
+}
+
+
+.item-noti-cartao-vermelho-jogador2{
+    width: 12px;
+    height: 14px;
+
+    float: right;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: red;
+    
+    margin: -18px 109px 0px 0px;
+    color: #000;
+    font-size: 12px;
+}
+
+.item-noti-cartao-azul-jogador2{
+    width: 12px;
+    height: 14px;
+
+    float: right;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: blue;
+
+    margin: -18px 126px 0px 0px;
+    color: #fff;
+    font-size: 12px;
+}
+
+
+
+
+.inclinar{
+    -webkit-transform: skewX(-15deg);
+    transform: skewX(-15deg);
+
+    border-radius: 3px;
+}
+
+.cartao-off{
+    background: #ddd;
+    border: 1px solid #aaa;
+}
+
+#cronometro{
+    width: 100%;
+    height: 80px;
+
+    text-align: center;
+
+    position: fixed;
+    bottom: 0px;
+
+    background: #fff;
+}
+
+#encerar-jogo{
+    width: 29%;
+    height: 40px;
+
+    float: left;
+    margin: 20px 0px 0px 0px;
+
+    color: #fff;
+  font-size: 14px;
+    background: #CF050C;
+}
+
+#tempo-jogo{
+    width: 40%;
+    height: 60px;
+
+    float: left;
+    margin: 10px 0px 0px 0px;
+
+    color: #fff;
+
+    border: 2px solid #cecece;
+    border-radius: 6px;
+}
+
+#pausar-jogo{
+    width: 29%;
+    height: 40px;
+
+    float: left;
+    margin: 20px 0px 0px 0px;
+
+    color: #fff;
+    font-size: 14px;
+    background: #007DC2;
+}
+
+#tempo-cronometrado{
+    color: #5B5B5F;
+    font-size: 48px;
+}
+
+#selecionar-acao{
+    min-width: 100%;
+    min-height: 100%;
+
+    position: absolute;
+    top: 60px;
+    left: 0;
+
+    overflow: hidden;
+
+    background: #0D5C23;
+    opacity: .90;
+}
+
+
+.mensagem-geral-classe{
+    min-width: 100%;
+    min-height: 100%;
+
+    position: absolute;
+    top: 70px;
+    left: 0;
+
+    overflow: hidden;
+
+    background: #0D5C23;
+    opacity: .98;
+}
+
+.descricao-mensagem-classe{
+    width: 100%;
+    float: left;
+    text-align: center;
+    margin-top: 65px;
+    opacity: 1;
+
+    color: #fff;
+    font-size: 24px;
+}
+
+
+#apito-img{
+    width: 55px;
+    height: 35px;
+
+    position: absolute;
+    top: 15px;
+    left: 50%;
+
+    margin-left: -31px; 
+
+    opacity: 1;
+}
+
+#texto-arbitro{
+    width: 100%;
+    float: left;
+    text-align: center;
+    margin-top: 65px;
+    opacity: 1;
+
+    color: #fff;
+    font-size: 30px;
+}
+
+.container-acoes-classe{
+    width: 100%;
+    min-height: 200px;
+
+    position: absolute;
+    top: 105px;
+    left: 10px;
+
+    background: transparent;
+
+    text-align: center;
+    clear: both;
+}
+
+.centralizar-quadrado{
+    width: 300px; 
+    position: absolute; 
+    top: 0px;
+    left: 50%;
+
+    margin-left: -150px;
+}
+
+.arbitro-quadrado{
+    width: 120px;
+    height: 120px;
+
+    float: left;
+
+    background: #fff;
+
+    margin: 10px;
+}
+
+.acao-azul{
+    width: 80px;
+    height: 80px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: #006CB6;
+
+    margin: 20px 0px 0px 20px;
+    font-size: 12px;
+
+    border-radius: 10px;
+}
+
+.acao-amarelo{
+    width: 80px;
+    height: 80px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: #FFEE00;
+
+    margin: 20px 0px 0px 20px;
+    font-size: 12px;
+
+    border-radius: 10px;
+}
+
+.acao-vermelho{
+    width: 80px;
+    height: 80px;
+
+    float: left;
+    clear: both;
+
+    border: 1px solid #ccc;
+    background: #E00209;
+
+    margin: 20px 0px 0px 20px;
+    font-size: 12px;
+
+    border-radius: 10px;
+}
+
+#cartao-escolhido{
+    min-width: 100%;
+    min-height: 100%;
+
+    position: absolute;
+    top: 0px;
+    left: 0;
+
+    overflow: hidden;
+
+    background: #0D5C23;
+
+    text-align: center;
+    color: #fff;
+}
+
+#cartao-nome-time{
+    font-size: 20px;
+    margin-top: 60px;
+}
+
+#cartao-nome-jogador{
+    font-size: 38px;
+    margin-top: 40px;
+}
+
+#cartao-numero-jogador{
+    font-size: 170px;
+    margin-top: 20px;
+}
+#cartao-voltar{
+    width: 100px;
+    border: 2px solid #fff;
+    padding: 10px;
+
+    position: relative;
+    left: 50%;
+
+    margin-left: 0px;
+}
+
+#times-selecionado{
+    width: 100%;
+    height: 140px;
+
+    background: transparent;
+
+    text-align: center;
+    color: #5B5B5E;
+    font-size: 22px;
+
+    border-bottom: 2px solid #D8DADE;
+}
+
+#menu-tela-times{
+    width: 100%;
+
+    background: transparent;
+    margin-top: 20px;
+
+    margin-bottom: 90px;
+
+    color: #fff;
+}
+
+.item-menu-times{
+    width: 96%;
+    height: 80px;
+
+    background: #65A924;
+
+    margin: 5px auto 5px auto;
+
+}
+
+.item-menu-estatistica{
+    width: 96%;
+    height: 50px;
+
+    background: #006024;
+
+    margin: 5px auto 5px auto;
+}
+
+.item-menu-times-img{
+    float: left; margin: 5px 0px 0px 10px
+}
+
+.item-menu-times-span{
+	font-size: 13pt;
+    float: left; margin: 15px 0px 0px 15px;
+}
+
+.lista-jogadores{
+    width: 100%;
+    height: 90px;
+
+    background: transparent;
+
+    border-bottom: 2px solid #D9DADF;
+
+    float: left;
+    margin: 0px 0px 10px 0px;
+    clear: both;
+}
+
+.lista-jg-img{
+	cursor: pointer; background: transparent; width: 80px; height: 80px; float: left;
+}
+
+.lista-jg-nome{
+    width: 70%;
+
+    font-size: 20px;
+    color: #5B5B5E;
+    
+    z-index: 99;
+    
+    text-align: left;
+    
+    margin-left: 0px;
+    background: transparent;
+    
+    margin: 5px 0px 0px 88px;
+   
+ }
+
+.lista-jg-posicao{
+	width: 70%;
+	
+   
+       
+    font-size: 16px;
+    color: #6D9B35;
+    
+    z-index: 99;
+    text-align: left;
+    
+   margin: 5px 0px 0px 88px;
+   
+}
+
+.lista-jg-time{
+	width: 70%;
+	
+   
+
+    font-size: 16px;
+    color: #5B5B5E;
+    
+    z-index: 99;
+    
+    text-align: left;
+    
+   margin: 5px 0px 0px 88px;
+    
+}
+
+.lista-jg-tel{
+    float: right;
+    margin: -64px 5px 0px 0px;
+    
+    z-index: 99;
+}
+
+#tempo-jogo-fim{
+    width: 160px;
+    height: auto;
+    background: transparent;
+    
+    margin-top: 25px;
+    
+    font-size: 24px;
+}
+
+#tbl-classificacao{
+	width: 100%; color: #333; text-align: left;
+	font-size: 15pt;
+	float: left;
+	clear: both;
+}
+
+#tbl-classificacao thead{
+	font-size: 18px;
+}
+
+#tbl-classificacao tr.m1{
+	background: #e1e1e1;
+	font-size: 12pt;
+}
+
+#tbl-classificacao tr.m2{
+	background: #c1c1c1;
+	font-size: 12pt;
+}
+
+#tbl-classificacao tr td{
+	
+}
+
+.udt{
+	color: blue;
+}
+
+.udtMias{
+	color: #000;
+}
+
+.rodape-fixo{
+    width: 100%;
+    height: 45px;
+
+    background-image: url('../img/barra-bottom.png');
+    background-size: cover;
+
+    position: fixed;
+    bottom: 0px;
+    z-index:100;
+    text-align: center;
+}
+
+.imagens-rodapev{
+	width: 40px;
+	height: 30px;
+}
+.imagens-rodapeh{
+	width: 30px;
+	height: 30px;
+}
+.imagens-rodapep{
+	width: 30px;
+	height: 30px;
+}
+
+.carrega-select{
+    width: 100%;
+    height: 35px;
+    border: 1px solid #529D26;
+    font-size: 18px;
+    
+}
+
+
+
+
+#iniciar-jogos-evento{
+    width: 100%;
+    height: 28px;
+    
+    position: fixed;
+    top: 59px;
+    
+    background: #ECEDEF;
+    font-size: 18px;
+    text-align: center;    
+    color: #5B5B5E;
+    padding: 5px 0px 0px 0px;
+    ;
+}
+
+#container-altera-acao{
+    width: 100%;
+    min-height: 200px;
+
+    position: absolute;
+    top: 130px;
+    left: 0px;
+
+    background: transparent;
+
+    text-align: center;
+    clear: both;
+}
+
+
+#centralizar-altera-acao{
+    width: 300px; 
+    position: absolute; 
+    top: 0px;
+    left: 50%;
+
+    margin-left: -150px;
+}

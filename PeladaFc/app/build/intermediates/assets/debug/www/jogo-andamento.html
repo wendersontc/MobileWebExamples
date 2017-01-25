@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/jquery.js" ></script>       
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+
+        
+
+        <script>
+            function fc_show_hide_menu() {
+                var bool = null;
+                bool = $('#showHideMenu').is(':visible');
+                if (!bool) {
+                    $('#showHideMenu').show(5);
+                } else {
+                    $('#showHideMenu').hide(5);
+                }
+            }
+        </script>
+
+        <script>
+            var db = null;
+           
+            var atime1 = new Array();
+            var atime2 = new Array();
+            var azul_codjog = new Array();
+            var azul_time = new Array();
+            var azul_tempo = new Array();            
+            var vct1=0;vct2=0,vct_azul=0;
+            var vtmp_azul = sessionStorage.getItem('tempo_cartao_azul');
+            
+            var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+            var vtempo = sessionStorage.getItem('vtempo');
+            var vtempo_min = sessionStorage.getItem('vtempo_min');
+            var vid = sessionStorage.getItem('vId');
+            var vcodtim1 = 0;
+            var vdestim1 ='';
+            var vcodtim2 = 0;
+            var vdestim2 = ''
+            var vcodtim  = 0;
+            var vdestim  = '';
+            var vcodjog  = 0;
+            var vapelido='';
+            var vnro    =0;
+            var vcodcao  = 0;
+            var vama=0,vazu=0,vver=0, vitem;
+            var vacao=0;
+            var veditar = sessionStorage.getItem('veditar');
+            
+            function onLoad() {
+	    		
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		
+	    		db.transaction(editarJogoAndamento, errorCB);	    		
+	    	}
+	    	
+	    	function editarJogoAndamento(tx){
+	    		
+	    		var sql = 'select a.*, l.desloc, t1.destim as time1, t2.destim as time2, t1.sigla as sigla1, t2.sigla as sigla2, ' +  
+	    		' e.hora_inicial as e_hr_inicial, e.hora_inicial as e_hr_final, e.primeiro_tempo_min, e.interval_min,e.segundo_tempo_min, ' +
+	    		' e.pontos_vitoria, e.pontos_empate,e.tempo_cartao_azul,e.comentario_tela_inicio, e.comentario_tela_final, ' +
+	    		' j.desjuiz ' +
+	    		' from tbl_jogos a  inner join tbl_time t1 on a.codtim1 = t1.codtim ' +
+	    		' inner join tbl_time t2 on a.codtim2 = t2.codtim ' +
+	    		' inner join tbl_evento e on a.codeve = e.codeve ' +
+	    		' left join  tbl_local l on a.codloc  = l.codloc ' +
+	    		' left join  tbl_juiz j on a.codjuiz  = j.codjuiz ' +
+	    		' where a.codeve=' + vcodeve + 
+	    		' and a.id_jogo='+ vid + ' order by a.date desc ' ;
+	    		tx.executeSql(sql, [], successEditar, errorCB);
+	    	}
+        	
+	    	function successEditar(tx, results){
+                    	    		
+	    	    if (results.rows.item(0).hora_inicial_real=='' || results.rows.item(0).hora_inicial_real ==null) {
+	    	    	var sql = 'update tbl_jogos set enviado=0, hora_inicial_real = "' + pegaHorMinSeg()+'" ';
+         	        sql += ' where id_jogo =' + vid + ' and codeve =' + vcodeve;         	 
+         	        tx.executeSql(sql);
+         	       if (vgrutel != 0){
+         	    	  fc_envia_movimento_id(vid);
+           		   }
+         	 
+	    	    	
+	    	    }	
+	    		
+
+	    		 vcodtim1 = results.rows.item(0).codtim1;
+	    		 vcodtim2 = results.rows.item(0).codtim2;
+	    		 
+	    		 $('#codtime1').attr('src', 'file:///mnt/sdcard/peladaFC/time_'+ vcodtim1 + '.jpg');
+		    	 $('#codtime2').attr('src', 'file:///mnt/sdcard/peladaFC/time_'+ vcodtim2 + '.jpg');
+	    		 
+	    		 vdestim1 =results.rows.item(0).time1;
+	    		 vdestim2 =results.rows.item(0).time2;
+	    		 
+	    		 $('#time1').text(results.rows.item(0).sigla1);
+           	     $('#time2').text(results.rows.item(0).sigla2);
+           	     
+           	     if (vtempo==1 || vtempo==2 ){
+           	    	$('#periodo_jogo').text(vtempo + 'º.Tempo');           	    	
+           	     }
+           	     
+           	    $('#gol1').text(0);
+        	    $('#gol2').text(0);
+           	  
+           	    atualiza_notificacoes();
+           	    iniciarCronometro();
+           	 
+	    	}
+	    	
+	    	
+	    	function atualiza_notificacoes() {
+	    		 
+	    		db.transaction(editarNotificacoes, errorCB);	    		
+	    	}
+	    	
+	    	function editarNotificacoes(tx){
+	    		
+	    		var sql = 'select a.codtim1, a.codtim2, (select count(*) as tgl1 from tbl_jogos_acao b ' +
+	    	    ' where b.id_jogo = a.id_jogo and b.codtim=a.codtim1 and codcao=1 ) as tgl1, ' +
+	    		   	            ' (select count(*) as tgl2 from tbl_jogos_acao c ' +
+	    	    ' where c.id_jogo = a.id_jogo and c.codtim=a.codtim2 and codcao=1 ) as tgl2 ' +
+	    		
+	    		' from tbl_jogos a ' +
+	    		' where a.codeve=' + vcodeve + 
+	    		' and a.id_jogo='+ vid + '  ' ;
+	    		
+	    		
+	    		tx.executeSql(sql, [], successNotificacoes, errorCB);
+
+	    		
+	    	}
+	    	
+            
+            
+            function successNotificacoes(tx, results){
+	    		
+	    		
+	    		
+	    		$('#gol1').text(results.rows.item(0).tgl1);
+          	    $('#gol2').text(results.rows.item(0).tgl2);
+          	    
+          	    
+            	  db.transaction(ProcuraTime1, errorCB);
+            	  
+            	  db.transaction(sessaoAzul, errorCB);
+	    		
+	    		
+	    		  	  
+           	     
+	    	}
+	    	
+	    	
+			function ProcuraTime1(tx){
+				
+				var sql = 'select codjog,desjog,apelido,nro, sum(gol) as gol, sum(azu) as azu, sum(azul_retorno) as azul_retorno,sum(ama) as ama, sum(ver) as ver  from (select a.codjog,j.desjog,j.apelido,j.nro,'+
+		          'case when codcao=1 then 1 else 0 end as gol, ' +
+		          'case when codcao=2 then 1 else 0 end as azu, ' +
+		          'case when codcao=2 and azul_retorno<>1 then 1 else 0 end as azul_retorno, ' +
+		          'case when codcao=3 then 1 else 0 end as ama, ' +
+		          'case when codcao=4 then 1 else 0 end as ver ' +
+		' from tbl_jogos_acao a '+
+		' inner join tbl_jogador j on a.codjog=j.codjog ' +
+		' where a.id_jogo='+ vid + ' and a.codtim= ' + vcodtim1 + '    ) t  group by codjog,desjog,apelido,nro ';	 	
+	    		tx.executeSql(sql, [], successProcuraTime1, errorCB);
+	    		
+	    		
+	    		
+	    	}
+            
+            function successProcuraTime1(tx, results){
+            	
+            	 vct1 = results.rows.length;
+            	 for (var i = 0; i < results.rows.length; i++) {
+            		 atime1[i] = '';
+            		 
+            		 //fc_mostra_altera_acao
+            		 
+            		 if(results.rows.item(i).azul_retorno>0){
+            			 atime1[i]  += '<img onclick="fc_mostra_altera_acao('+results.rows.item(i).codjog+')" src="img/cartao_azul.png" width="40" height="40" class="item-noti-img-jogador" />'; 
+            		 } else {
+            			 atime1[i]  += '<img onclick="fc_mostra_altera_acao('+results.rows.item(i).codjog+')" src="file:///mnt/sdcard/peladaFC/jog_'+results.rows.item(i).codjog+'.jpg" width="40" height="40" class="item-noti-img-jogador" />';	 
+            		 }
+            		 
+            		 atime1[i]  += '<span onclick="fc_mostra_altera_acao('+results.rows.item(i).codjog+')"  class="item-noti-apelido-jogador"> ' +results.rows.item(i).apelido+ ' </span>';
+            		 atime1[i]  += '<span class="item-noti-numero-jogador"> '+ results.rows.item(i).nro +' </span>';
+            		 atime1[i]  += '<span class="item-noti-gols-jogador">  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 1px;" >' + results.rows.item(i).gol + '</span>  </span>';
+         			 if (results.rows.item(i).ama==0){
+         			 	 atime1[i]  += '<div class="item-noti-cartao-amarelo-jogador inclinar cartao-off">  </div>';	
+         		 	 } else {
+         				 atime1[i]  += '<div class="item-noti-cartao-amarelo-jogador inclinar"> ' + results.rows.item(i).ama + ' </div>';
+         			 }
+         		 	 if (results.rows.item(i).ver==0){
+         				 atime1[i]  += '<div class="item-noti-cartao-vermelho-jogador inclinar cartao-off">  </div>';	
+         			 } else {
+         				 atime1[i]  += '<div class="item-noti-cartao-vermelho-jogador inclinar"> ' + results.rows.item(i).ver + ' </div>';
+         			 }
+         			 if (results.rows.item(i).azu==0){
+         				 atime1[i]  += '<div class="item-noti-cartao-azul-jogador inclinar cartao-off">  </div>';	
+         			 } else {
+         				 atime1[i]  += '<div class="item-noti-cartao-azul-jogador inclinar"> ' + results.rows.item(i).azu + ' </div>';
+         			 }
+         			
+                 }
+            	 db.transaction(ProcuraTime2, errorCB);
+            	 
+            }
+            
+           
+            function ProcuraTime2(tx){
+	    		
+
+            	var sql = 'select codjog,desjog,apelido,nro, sum(gol) as gol, sum(azu) as azu, sum(azul_retorno) as azul_retorno,sum(ama) as ama, sum(ver) as ver  from (select a.codjog,j.desjog,j.apelido,j.nro,'+
+		          'case when codcao=1 then 1 else 0 end as gol, ' +
+		          'case when codcao=2 then 1 else 0 end as azu, ' +
+		          'case when codcao=2 and azul_retorno<>1 then 1 else 0 end as azul_retorno, ' +
+		          'case when codcao=3 then 1 else 0 end as ama, ' +
+		          'case when codcao=4 then 1 else 0 end as ver ' +
+		' from tbl_jogos_acao a '+
+		' inner join tbl_jogador j on a.codjog=j.codjog ' +
+		' where a.id_jogo='+ vid + ' and a.codtim= ' + vcodtim2 + '    ) t  group by codjog,desjog,apelido,nro ';	 	 		
+	    		
+	    		tx.executeSql(sql, [], successProcuraTime2, errorCB);
+	    		
+	    		
+	    	}
+        	
+           
+           function successProcuraTime2(tx, results){
+        	   vct2 = results.rows.length;
+           	 for (var i = 0; i < results.rows.length; i++) {
+           		 atime2[i] = '';
+           		                 
+           		 if(results.rows.item(i).azul_retorno>0){           			
+           			
+           			atime2[i] += '<img onclick="fc_mostra_altera_acao('+results.rows.item(i).codjog+')" src="img/cartao_azul.png" width="40" height="40" class="item-noti-img-jogador2" />'; 
+           		 }else{
+           			atime2[i] += '<img onclick="fc_mostra_altera_acao('+results.rows.item(i).codjog+')" src="file:///mnt/sdcard/peladaFC/jog_'+results.rows.item(i).codjog+'.jpg" width="40" height="40" class="item-noti-img-jogador2" />';	 
+           		 }
+           		 
+           		 atime2[i] += '<span onclick="fc_mostra_altera_acao('+results.rows.item(i).codjog+')"  class="item-noti-apelido-jogador2" > ' +results.rows.item(i).apelido+ ' </span>';
+           		 atime2[i] += '<span class="item-noti-numero-jogador2" > '+ results.rows.item(i).nro +' </span>';
+           		 atime2[i] += '<span class="item-noti-gols-jogador2" >  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 1px;" > ' + results.rows.item(i).gol + ' </span>  </span>';
+    			 if (results.rows.item(i).ama==0){
+    				atime2[i] += '<div class="item-noti-cartao-amarelo-jogador2 inclinar cartao-off">  </div>';	
+    			 } else {                		
+    				atime2[i] += '<div class="item-noti-cartao-amarelo-jogador2 inclinar"> ' + results.rows.item(i).ama + ' </div>';
+    			 }
+    			 if (results.rows.item(i).ver==0){
+    		 		atime2[i] += '<div class="item-noti-cartao-vermelho-jogador2 inclinar cartao-off">  </div>';	
+    	 		 } else {
+    				atime2[i] += '<div class="item-noti-cartao-vermelho-jogador2 inclinar"> ' + results.rows.item(i).ver + ' </div>';
+    			 }
+    			 if (results.rows.item(i).azu==0){
+    				atime2[i] += '<div class="item-noti-cartao-azul-jogador2 inclinar cartao-off">  </div>';	
+    			 } else {
+    				atime2[i] += '<div class="item-noti-cartao-azul-jogador2 inclinar"> ' + results.rows.item(i).azu + ' </div>';                		
+    			 }
+        			
+                
+           	 }
+           	 
+           	var htm = '<div class="n-item">';
+            var ct_maior=vct1;
+            if (vct2>vct1){
+            	ct_maior=vct2;                	
+            }
+            
+            for (var i = 0; i < ct_maior; i++) {
+            	
+              	htm += '<div class="item-notificacoes" style="" >';
+            	if (i<vct1){
+            		htm +=	atime1[i];                        
+            	} else {
+            		htm += '<div></div>';
+            	}
+            	htm += '</div>';
+             	
+             
+            	htm += '<div class="item-notificacoes">';
+            	if (i<vct2){
+            		htm +=	atime2[i];                        
+            	
+                } else {
+        		   htm += '<div></div>';
+        	    }
+
+            	htm += '</div>';           
+            	
+            	
+            }
+            
+            
+            
+            htm += '<div class="item-notificacoes">';
+            htm += '<div class="item-noti-apelido-jogador"> click no escudo para efetuar uma ação </div><br/><br/><br/>';
+           
+            htm += '</div>';
+            
+            
+            htm += '</div>';
+            
+            htm += '<div class="clear"> </div>';
+            $('#notificacoes-jogo').html(htm);
+           }
+           
+           
+           function sessaoAzul(tx){
+	    		
+
+           	var sql = 'select codtim, codjog, hora_acao ' +
+					' from tbl_jogos_acao ' +
+					' where id_jogo='+ vid +  ' and codcao=2 and azul_retorno<>1 order by hora_acao ';	
+					
+	    		tx.executeSql(sql, [], succesSsessaoAzul, errorCB);
+	    		
+	    		
+	    	}
+           
+           
+           function succesSsessaoAzul(tx, results){
+        	   var vhrmin=pegaHorMinSeg();        	   
+        	   var vhrazul = '', sg1=0, sg2=0,restante=0;
+        	   
+        	   var B= vhrmin.split(':').map(function(itm){        	    	
+        	        return parseInt(itm, 10)
+        	   });
+        	    vct_azul =0;
+        	    for(var i=0; i< results.rows.length; i++){
+        	    	vhrazul =results.rows.item(i).hora_acao;	    			
+        	    	var A= vhrazul.split(':').map(function(itm){        	    
+            	        return parseInt(itm, 10)
+            	   });
+             
+        	       sg2=(((B[0]*60)*60)+(B[1]*60)+B[2]);
+        	       sg1=(((A[0]*60)*60)+(A[1]*60)+A[2]);
+               	 
+               	   restante = sg2-sg1;
+               	   
+                   vct_azul +=1;
+                	
+                   azul_codjog[i]=results.rows.item(i).codjog;
+                   azul_time[i]=results.rows.item(i).codtim;
+                   //ajusta o tempo ja gasto
+                   azul_tempo[i]=restante;
+                   
+                //   alert( azul_codjog[i] + '  B' + vhrmin + '  A' +  vhrazul +  '  restante  ' + restante);
+        	    	
+	    		}
+        	   
+        	 
+           }
+
+           function retornoAzul() {
+	    		 
+	    		db.transaction(fc_retornoAzul, errorCB);	    		
+	    	}
+	    	
+
+           
+           function fc_retornoAzul(tx){
+	    		
+              	var sql = 'update tbl_jogos_acao set enviado=0, hora_retorno = "' + pegaHorMinSeg() + '",azul_retorno=1 ' +
+   					' where id_jogo='+ vid +  ' and codcao=2 and codjog= ' + vcodjog + ' and codtim =' + vcodtim ;	
+   				tx.executeSql(sql);
+   	    		
+   				if (vgrutel != 0){
+   					fc_envia_movimento_id(vid);
+        		}
+   	    		
+   	    	}
+
+           
+	    	//cronometro
+	    	    var timeGameMin = 0, mostraMin = '';
+	            var timeGameSeg = 0, mostraSeg = '';
+
+	            var pauseSI = true;
+
+	            var timeReal = 0;
+	            var timeRealMin = 0;
+	            var MostraTempo = '';
+	            var MostraTempoReal = '';
+	            var timeFormat = null;
+	            
+	            
+	            	            
+	            
+	            
+            function iniciarCronometro() {
+            	var s=sessionStorage.getItem('vcronometro');
+           	    var s1=sessionStorage.getItem('vcronometro_real');
+                var A= s.split(':').map(function(itm){
+	            	
+	                return parseInt(itm, 10)
+	            });
+                if (isNaN(A[0])){
+                	timeGameMin = 0;
+                	timeGameSeg = 0;
+                } else  {
+                	timeGameMin = A[0];
+                	timeGameSeg = A[1];
+                }
+                 var B= s1.split(':').map(function(itm){
+	            	
+	                return parseInt(itm, 10)
+	            });
+                if (isNaN(B[0])){
+                	timeRealMin = 0;
+                	timeReal = 0;
+                } else  {
+                	timeRealMin = B[0];
+                	timeReal = B[1];
+                }
+                setInterval(refreshTime, 1000);
+            }
+            function refreshTime() {
+                timeReal += 1;
+                if (timeReal === 60) {
+                    timeRealMin += 1;
+                    timeReal = 0;
+                    salvaJogoTemp();
+                }
+                if (timeReal == 1 || timeReal ==11 || timeReal == 21 || timeReal == 31 || timeReal == 41 || timeReal == 51) {
+                    salvaJogoTemp();                    
+                }
+                if (vct_azul>0) {
+           		   for (var i = 0; i < vct_azul; i++) {
+           		  	   azul_tempo[i]+=1;
+           			   if (azul_tempo[i]>(vtmp_azul*60)){
+           				   vcodjog=azul_codjog[i];
+           			       vcodtim=azul_time[i];
+           			       
+
+           			       retornoAzul();
+           			       atualiza_notificacoes()
+           			       navigator.notification.vibrate(3000);           			       
+            			   
+           			   }
+           		   } 
+           			 
+           	  }    
+                
+                if (pauseSI) {
+                    timeGameSeg += 1;
+                    if (timeGameSeg === 60) {
+                        timeGameMin += 1;
+                        timeGameSeg = 0;
+                        if (timeGameMin>=vtempo_min){
+                        	navigator.notification.vibrate(5000);
+                        	navigator.notificationbeep(5);
+
+                        	//tempo alcancado
+                        	
+                        }    
+                    }
+
+                    if (timeGameSeg <= 9) {
+                        mostraSeg = '0' + timeGameSeg;
+                    } else {
+                        mostraSeg = '' + timeGameSeg;
+                    }
+
+                    if (timeGameMin <= 9) {
+                        mostraMin = '0' + timeGameMin;
+                    } else {
+                        mostraMin = '' + timeGameMin;
+                    }
+
+                    MostraTempo = mostraMin + ':' + mostraSeg;
+
+                    $('#tempo-cronometrado').text(MostraTempo);
+                    
+                }
+                
+                if (timeReal <= 9) {
+                    mostraSeg = '0' + timeReal;
+                } else {
+                    mostraSeg = '' + timeReal;
+                }
+
+                if (timeRealMin <= 9) {
+                    mostraMin = '0' + timeRealMin;
+                } else {
+                    mostraMin = '' + timeRealMin;
+                }
+
+                MostraTempoReal = mostraMin + ':' + mostraSeg;
+
+            }
+
+            function pauseSetInterval() {
+                pauseSI = !pauseSI;
+                if (pauseSI) {
+                       $('#textoPausa').html('PAUSAR');
+                       $('#tempo-cronometrado').css('color', '#5B5B5F');
+                       
+                } else {
+                	   $('#textoPausa').html('CONTINUAR');
+                       $('#tempo-cronometrado').css('color', 'red');                       
+                }
+                confirmaPausa();
+            }
+            function confirmaPausa(){
+            	
+               var bool = null;
+                
+                bool = $('#pausa-jogo').is(':visible');
+                if (!bool) {
+                	if (pauseSI) {
+                	    $('#descricao-pausa').text('Deseja Realmente Parar o tempo do Jogo ?');
+                	} else {
+                		$('#descricao-pausa').text('Deseja Realmente Recomeçar o Jogo ?');
+                	}    
+                    $('#pausa-jogo').show(5);                
+                } else {
+                    $('#pausa-jogo').hide(5);                   
+                }
+                
+            	
+            }
+            
+
+
+            //******************************************************************
+
+            function fc_selecionar_jogador(team) {
+                var bool = null;
+               
+                
+                bool = $('#container-ic-interna').is(':visible');
+                if (bool) {
+                    $('#container-ic-interna').hide(5);
+                    $('#cronometro').hide(5);
+                    $('#container-ic-interna-jogador').show(5);
+                    $('#footer-jogador-voltar').show(5);
+                    if (team==1){
+                    	vcodtim=vcodtim1;
+                    	vdestim=vdestim1;
+                    } else {
+                    	vcodtim=vcodtim2;
+                    	vdestim=vdestim2;
+                    };
+                    
+                    var pathSelecionarJog = 'file:///mnt/sdcard/peladaFC/time_' + vcodtim + '.jpg' ;
+                    $('#selecionarTimeAcao').attr('src', pathSelecionarJog);
+                    
+                    
+                    //alert(team + '  ' + vcodtim + '  ' + vdestim);
+                    db.transaction(carregaJogador, errorCB);
+                } else {
+                    $('#container-ic-interna').show(5);
+                    $('#cronometro').show(5);
+                    $('#container-ic-interna-jogador').hide(5);
+                    $('#footer-jogador-voltar').hide(5);
+                  
+                }
+            }
+
+            
+function carregaJogador(tx){
+	
+            	 $('#seljog-time').text(vdestim);
+
+      var sql = 'select a.codjog, a.desjog, a.apelido, a.nro, ' +
+	    		' (select count(*) from tbl_jogos_acao b1 where b1.id_jogo=' + vid + ' and b1.codtim='+vcodtim+' and b1.codcao=1 and a.codjog=b1.codjog) as gol, ' +
+	    		' (select count(*) from tbl_jogos_acao b1 where b1.id_jogo=' + vid + ' and b1.codtim='+vcodtim+' and b1.codcao=2 and a.codjog=b1.codjog) as azu, ' +
+	    		' (select count(*) from tbl_jogos_acao b1 where b1.id_jogo=' + vid + ' and b1.codtim='+vcodtim+' and b1.codcao=3 and a.codjog=b1.codjog) as ama, ' +
+	    		' (select count(*) from tbl_jogos_acao b1 where b1.id_jogo=' + vid + ' and b1.codtim='+vcodtim+' and b1.codcao=4 and a.codjog=b1.codjog) as ver,  ' +
+	    		' (select count(*) from tbl_jogos_vermelho v ' +
+	    	    ' where v.codeve='+ vcodeve + ' and v.id_jogo<' + vid + ' and v.aberto=1 and a.codjog=v.codjog) as suspenso  ' +
+	    		' from tbl_jogador a inner join tbl_jogador_time j on a.codjog=j.codjog and j.codeve =' + vcodeve +
+	    		' where j.codtim=' + vcodtim + 
+	    		' order by a.apelido  ' ;
+	    		
+	    		
+	    		tx.executeSql(sql, [], successCarregaJogador, errorCB);
+	    	}
+        	
+	    	function successCarregaJogador(tx, results){
+	    		
+	    			
+	    		var htm = '<div class="n-item" >';
+          	    
+                for (var i = 0; i < results.rows.length; i++) {
+                
+                	//alert("file:///mnt/sdcard/peladaFC/jog_"+results.rows.item(i).codjog+".jpg");
+                	
+                	htm += '<div class="item-notificacoes" onclick="fc_select_action(' +results.rows.item(i).codjog+ ',\''+results.rows.item(i).apelido+ '\','+results.rows.item(i).nro+ ',' + results.rows.item(i).ama+','+results.rows.item(i).azu+','+results.rows.item(i).ver+')" style="" >';
+                
+                	htm += '<img src="file:///mnt/sdcard/peladaFC/time_'+ vcodtim + '.jpg" width="40" height="40" class="item-noti-img-jogador" />';
+                	if (results.rows.item(i).suspenso==0){
+                	   htm += '<span class="item-noti-apelido-jogador"> ' +results.rows.item(i).apelido+ ' </span>';
+                	} else {
+                	   htm += '<span class="item-noti-apelido-jogador" style="color:red"> ' +results.rows.item(i).apelido+ ' </span>';
+                		
+                	}   
+                	htm += '<span class="item-noti-numero-jogador"> ' +results.rows.item(i).nro+ ' </span>';
+                	htm += '<span class="item-noti-gols-jogador">  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 3px;" > ' +results.rows.item(i).gol+ ' </span>  </span>';
+                	
+                	if (results.rows.item(i).ama==0){
+                		htm += '<div class="item-noti-cartao-amarelo-jogador inclinar cartao-off">  </div>';	
+                	} else {                		
+                		htm += '<div class="item-noti-cartao-amarelo-jogador inclinar"> ' + results.rows.item(i).ama + ' </div>';
+                	}
+                	if (results.rows.item(i).ver==0){
+                		htm += '<div class="item-noti-cartao-vermelho-jogador inclinar cartao-off">  </div>';
+                	} else {                		
+                		htm += '<div class="item-noti-cartao-vermelho-jogador inclinar"> ' + results.rows.item(i).ver + ' </div>';
+                	}
+                	if (results.rows.item(i).azu==0){
+                		htm += '<div class="item-noti-cartao-azul-jogador inclinar cartao-off">  </div>';
+                	} else {                		
+                		htm += '<div class="item-noti-cartao-azul-jogador inclinar"> ' + results.rows.item(i).azu + ' </div>';
+                	}
+                	
+                	
+                	htm += '</div>';
+          
+                	//htm += '<div class="clear"> </div>';
+                
+                	
+                }
+                htm += '</div><br/><br/><br/><br/>';
+               
+                $('#notificacoes-jogador').html(htm);
+	    		  	  
+           	     
+	    	}
+	    	
+	    	
+	    	
+            
+            var escolha = null;
+
+            function fc_select_action(item, ap, nr, qt_ama,qt_azu,qt_ver) {
+            	
+                var bool = null;
+                vcodjog=item;
+                vitem=item;
+                vama=qt_ama;
+                vazu=qt_azu;
+                vver=qt_ver;
+                vapelido=ap;
+                vnro=nr;
+               
+           
+                bool = $('#selecionar-acao').is(':visible');
+                if (!bool) {
+                    escolha = null;
+                    $('#texto-arbitro').text(vapelido + ' nr.'+vnro);
+                    
+                   
+                    
+                    $('#selecionar-acao').show(5); 
+                    
+                    
+                    
+                
+                } else {
+                    if (escolha === null) {
+                        $('#selecionar-acao').hide(5);
+                    } else {
+                    	var vdesesc=' GOL';
+                    	if (escolha==2){
+                    		vdesesc='CARTÃO AZUL';
+                    	} else{
+                    		if (escolha==3){
+                    		   vdesesc='CARTÃO AMARELO';
+                    		}else{
+                        		if (escolha==4){
+                         		   vdesesc='CARTÃO VERMELHO';
+                         		}
+                    		}	
+                    		
+                    		
+                    	}
+                    	$('#descricao-mensagem').text('Confirme: ' + vdesesc);
+                    	fc_mostra_mensagem(1);
+                        	
+                    }
+
+                }
+            }
+            
+            function fc_mostra_mensagem(vbotao) {            	
+                var bool = null;
+                
+                bool = $('#mensagem-geral').is(':visible');
+                if (!bool) {
+                    $('#mensagem-geral').show(5);                
+                } else {
+                    $('#mensagem-geral').hide(5);                   
+                }
+            }
+
+    function fc_resultado_mensagem(vres) {
+	     if (vres==1){
+	    	 vcodcao=escolha;
+	    	//escolha eh o codigo da acao
+         	if (escolha==4){
+         		salvar_vermelho();
+         	} else{
+         		salvar_escolha();
+         	}
+         		
+         
+         	
+         	
+             if (escolha != 1) {
+                 //chamar tela do cartao
+                 
+					fc_mostra_cartao(escolha);   
+                 
+                 if (escolha==3) {
+                 	//verficar se existe mais de um cartao                                	
+                 	if((vama+1)>1){
+                 		//dar cartao vermelho automatico  
+                 		salvar_vermelho();
+                 		fc_mostra_cartao(5);                                        
+                 		
+                 	}
+                 	
+                 }
+             }
+             
+             $('#selecionar-acao').hide(5);
+             fc_selecionar_jogador(null);
+	     }else{
+	    	 //fc_mostra_mensagem(0);
+	    	 escolha = null;            
+	     }
+	     fc_mostra_mensagem(0);
+	}
+
+            
+            function fc_mostra_cartao(c){
+                vacao=c;
+            	var varColor = '';
+                switch (c) {
+                    case 2:
+                        varColor = '#006BB6';
+                        break;
+                    case 3:
+                        varColor = '#FFEE00';
+                        break;
+                    case 5:
+                        varColor = '#FFEE00';
+                        break;    
+                    case 4:
+                        varColor = '#E00209';
+                        break;
+                }
+               $('#cartao-nome-time').text(vdestim);
+                $('#cartao-nome-jogador').text(vapelido);
+                $('#cartao-numero-jogador').text(vnro);
+                $('#cartao-escolhido').css('background', varColor);
+                $('#cartao-escolhido').show(5);            	
+            	
+                
+            }
+            
+            function salvar_vermelho(){            	
+            	db.transaction(fc_salvar_vermelho, errorCB);
+            	atualiza_notificacoes();
+            }
+            
+            function fc_salvar_vermelho(tx){
+				
+            	 var sql='insert into tbl_jogos_acao (id_jogo,codtim,codjog,codcao,hora_acao,periodo_jogo,azul_retorno,grutel,codeve,enviado) values '+
+              	'(' + vid + ',' +vcodtim + ',' + vcodjog+ ',4,"'+pegaHorMinSeg()+'",'+vtempo+',0,'+vgrutel+','+vcodeve+',0)';
+  			 	tx.executeSql(sql);
+  				db.transaction(existe_jogador_vermelho, errorCB);
+  					
+    	}
+    	
+    	function existe_jogador_vermelho(tx){
+    		var sql = 'select * from tbl_jogos_vermelho where codeve=' + vcodeve + ' and codjog = ' + vcodjog ;
+    	
+    		tx.executeSql(sql, [], successJogador_vermelho, errorCB);
+    	}
+    	
+    	function successJogador_vermelho(tx, results){
+    		var sql='Update tbl_jogos_vermelho set enviado=0,id_jogo=' +vid+ ', aberto=1 where codeve=' + vcodeve + ' and codjog = ' + vcodjog ;
+    		if (results.rows.length==0) {
+    			sql='insert into tbl_jogos_vermelho(codeve, codjog, id_jogo, aberto, grutel,enviado ) values ' +
+    			    '('+vcodeve+','+vcodjog+','+vid+',1,'+vgrutel+',0)';
+    			
+    		}
+    		tx.executeSql(sql);
+    		
+    	}
+    
+            
+            
+           function salvar_escolha(){            	
+            	db.transaction(fc_salvar_escolha, errorCB);
+            	atualiza_notificacoes();
+            }
+           
+           
+           function fc_salvar_escolha(tx){
+				
+		   var sql='insert into tbl_jogos_acao (id_jogo,codtim,codjog,codcao,hora_acao,periodo_jogo,azul_retorno, grutel,codeve,  enviado) values '+
+            	'(' + vid + ',' +vcodtim + ',' + vcodjog+ ','+vcodcao+',"'+pegaHorMinSeg()+'",'+vtempo+',0,'+vgrutel+','+vcodeve+',0)';
+			
+		   
+           	tx.executeSql(sql, [], successSalvaEscolha, errorCB);
+           	
+           
+           	
+           }
+           
+           function successSalvaEscolha(){
+        		if (vgrutel != 0){                	
+            		fc_envia_movimento_id(vid);
+        		}
+           }
+           
+           
+            function fc_arbitro(choice) {
+                escolha = choice;
+            }
+
+            function fc_quit_card() {
+            	
+                $('#cartao-escolhido').hide(5);
+                if (vacao==5) {
+                	fc_mostra_cartao(4);
+                	
+                }
+            }
+            
+            function fc_mostra_encerrarJogo(){
+            	var bool = null;
+               
+                bool = $('#encerrar-jogo').is(':visible');
+                if (!bool) {
+                	$('#descricao-encerrar').text('Deseja Realmente Encerrar o Jogo ?');
+                    $('#encerrar-jogo').show(5);                
+                } else {
+                    $('#encerrar-jogo').hide(5);                   
+                }
+                
+            }
+            
+            
+            function encerrarJogo(){
+            	db.transaction(fc_atualiza_cartao_vermelho, errorCB);
+                    
+                
+            }
+            
+            
+        	
+	    	
+	    	
+  function fc_atualiza_cartao_vermelho(tx){
+  	
+  	    var sql = 'select  a.codjog, v.id_jogo ' + 
+		' from tbl_jogador a  inner join tbl_jogos_vermelho v on a.codjog = v.codjog ' +
+		' where a.codtim=' + vcodtim1 + 
+		' and v.aberto=1 and  v.id_jogo<'+ vid  ;
+ 
+		tx.executeSql(sql, [], success_atualiza_cartao_vermelho, errorCB);		
+	
+		
+	}
+  
+  
+  function success_atualiza_cartao_vermelho(tx, results){		
+		var sql='';
+		filtraVermelho='';
+		//alert(sql);
+		for(var i =0; i< results.rows.length; i++){
+			sql = 'update tbl_jogos_vermelho set aberto=0 where codeve= ' + vcodeve + ' and codjog =' + results.rows.item(i).codjog  + ' and id_jogo =' + results.rows.item(i).id_jogo;
+			//alert(sql);	
+			tx.executeSql(sql);
+			if (filtraVermelho==''){
+				filtraVermelho += ' where';
+			} else {
+				filtraVermelho += ' or ';				
+			}
+			filtraVermelho += ' (grutel = '+vgrutel +' and codeve= ' + vcodeve + ' and  codjog =' + results.rows.item(i).codjog  + ' and id_jogo =' + results.rows.item(i).id_jogo+')';
+		
+		}
+		
+	
+		db.transaction(fc_atualiza_cartao_vermelho2, errorCB);
+        
+		
+ 	    
+	}
+
+  
+  function fc_atualiza_cartao_vermelho2(tx){
+	  	
+	   
+		
+		sql = 'select   a.codjog, v.id_jogo ' + 
+		' from tbl_jogador a  inner join tbl_jogos_vermelho v on a.codjog = v.codjog ' +
+		' where a.codtim=' + vcodtim2 + 
+		' and v.aberto=1 and  v.id_jogo<'+ vid  ;
+		
+		tx.executeSql(sql, [], success_atualiza_cartao_vermelho2, errorCB);
+		
+		
+	}
+	
+
+   function success_atualiza_cartao_vermelho2(tx, results){		
+		var sql='';
+	
+		for(var i =0; i< results.rows.length; i++){
+			sql = 'update tbl_jogos_vermelho set aberto=0 where codeve= ' + vcodeve + ' and codjog =' +
+			      results.rows.item(i).codjog  + ' and id_jogo =' + results.rows.item(i).id_jogo;
+		
+			tx.executeSql(sql);
+			if (filtraVermelho==''){
+				filtraVermelho += ' where';
+			} else {
+				filtraVermelho += ' or ';				
+			}
+			filtraVermelho += ' (grutel = '+vgrutel +' and codeve= ' + vcodeve + ' and  codjog =' + results.rows.item(i).codjog  + ' and id_jogo =' + results.rows.item(i).id_jogo+')';
+		}
+		
+		db.transaction(fc_EncerrarJogo, errorCB);
+	
+		
+	}
+  
+   function fc_EncerrarJogo(tx){
+	   var sql = 'select a.*, l.desloc, t1.destim as time1, t2.destim as time2, t1.sigla as sigla1, t2.sigla as sigla2, ' +  
+		' e.hora_inicial as e_hr_inicial, e.hora_inicial as e_hr_final, e.primeiro_tempo_min, e.interval_min,e.segundo_tempo_min, ' +
+		' e.pontos_vitoria, e.pontos_empate,e.tempo_cartao_azul,e.comentario_tela_inicio, e.comentario_tela_final, ' +
+		'  j.desjuiz, ' +
+		' (select count(*) from tbl_jogos_acao b where a.id_jogo = b.id_jogo and a.codtim1 = b.codtim and codcao=1) as sgol1, ' +
+		' (select count(*) from tbl_jogos_acao b where a.id_jogo = b.id_jogo and a.codtim2 = b.codtim and codcao=1) as sgol2  ' +
+		
+		' from tbl_jogos a  inner join tbl_time t1 on a.codtim1 = t1.codtim ' +
+		' inner join tbl_time t2 on a.codtim2 = t2.codtim ' +
+		' inner join tbl_evento e on a.codeve = e.codeve ' +
+		' left join  tbl_local l on a.codloc  = l.codloc ' +
+		' left join  tbl_juiz j on a.codjuiz  = j.codjuiz ' +
+		' where a.codeve=' + vcodeve + 
+		' and a.id_jogo='+ vid  ;
+	   //alert(sql);
+		tx.executeSql(sql, [], successEncerrarJogo, errorCB);
+   	
+	}
+	function successEncerrarJogo(tx, results){
+		
+		 var sql='update tbl_jogos set enviado=0,';
+		 //falta gravar hora final
+		 var vponto1 = 0;
+		 var vponto2 = 0;
+		       if (results.rows.item(0).sgol1>results.rows.item(0).sgol2) {
+   			     vponto1=results.rows.item(0).pontos_vitoria;
+   			  } else {
+   				  if (results.rows.item(0).sgol1<results.rows.item(0).sgol2){
+   					  vponto2=results.rows.item(0).pontos_vitoria;            					  
+   				  } else {
+   					  vponto1=results.rows.item(0).pontos_empate;
+   					  vponto2=results.rows.item(0).pontos_empate;
+   				  }
+   			  } 
+   	 if (vtempo ==1){            		 
+   		 if (veditar==0){
+   		     sql += 'primeiro_encerrado=1, primeiro_tempo = "' + MostraTempo + '", primeiro_tempo_real="'+MostraTempoReal+'"';
+   		 }
+   		  
+   		  if (results.rows.item(0).interval_min==0 || results.rows.item(0).interval_min==null){
+   			  if (veditar==0){
+   			      sql += ',encerrado=1, hora_final = "' + pegaHorMinSeg()+'"' ;
+   			  }
+   			  sql += ', gol1 = ' + results.rows.item(0).sgol1 +',gol2='+ results.rows.item(0).sgol2  ;
+   			  sql += ', ponto1=' + vponto1 +', ponto2=' + vponto2 ;
+   		  }
+   		
+   	 } else {
+   	   if (vtempo==0){
+   		   if (veditar==0){
+   		       sql += 'intervalo_encerrado=1, intervalo = "' + MostraTempo + '" , intervalo_real="'+MostraTempoReal+'"';
+   		   }
+   		   
+   		   if (results.rows.item(0).segundo_tempo_min==0 || results.rows.item(0).segundo_tempo_min==null){
+   			   if (veditar==0){
+    			      sql += ',encerrado=1, hora_final ="' + pegaHorMinSeg()+'"' ;
+   			   }
+   			  sql += ',gol1 = ' + results.rows.item(0).sgol1 +',gol2='+ results.rows.item(0).sgol2 ;
+    			  sql += ', ponto1=' + vponto1 +', ponto2=' + vponto2 ;
+    		  }
+   	   } else {
+   		   if (veditar==0){
+   		       sql += 'segundo_encerrado=1, hora_final ="' + pegaHorMinSeg() + '", segundo_tempo = "' + MostraTempo + '", segundo_tempo_real="'+MostraTempoReal+'", encerrado=1,';
+   		   }
+   		   sql += 'gol1 = ' + results.rows.item(0).sgol1 +',gol2='+ results.rows.item(0).sgol2 ;
+   		   sql += ', ponto1=' + vponto1 +', ponto2=' + vponto2 ;
+   	   } 	
+      		 
+   	 } 
+   	 
+   	 sql += ' where id_jogo =' + vid + ' and codeve =' + vcodeve;
+   	//alert(sql);
+   //	alert(sql);
+   	 tx.executeSql(sql, [], sucesso_grava_encerra_jogo, errorCB);
+   	 
+   	 
+	}
+
+	
+function sucesso_grava_encerra_jogo(tx) {
+
+
+
+
+ if (vgrutel != 0){
+	  ShowHideLoad('true');
+	  OrigemPagina='iniciar-jogo.html';
+	  fc_envia_movimento_id(vid);
+	  
+	} else {
+		fc_link('iniciar-jogo.html');         	
+  	
+	}
+  
+       
+}
+  
+		function salvaJogoTemp(){
+            	
+                db.transaction(fc_salvaJogoTemp, errorCB);
+                
+            }
+            
+            function fc_salvaJogoTemp(tx){
+            	if (MostraTempo!=null && MostraTempo!='') {
+            	 var sql='update tbl_jogos set enviado=0, ';
+	    		 
+            	 if (vtempo ==1){             		 
+            		  sql += ' primeiro_tempo = "' + MostraTempo + '", primeiro_tempo_real="'+MostraTempoReal+'"';
+            		 
+            	 } else {
+            	   if (vtempo==0){               		 
+            		   sql += ' intervalo = "' + MostraTempo + '" , intervalo_real="'+MostraTempoReal+'"';	                   	 	
+            	   } else {
+            		   sql += ' segundo_tempo   = "' + MostraTempo + '", segundo_tempo_real="'+MostraTempoReal+'" ';
+            	   } 	
+               		 
+            	 } 
+            	 sql += ' where id_jogo =' + vid + ' and codeve =' + vcodeve;
+            	 
+            	 tx.executeSql(sql);
+            	 
+            	 if (vgrutel != 0){
+            		 fc_envia_movimento_id(vid);
+        		   }
+            	 
+            	}
+            	 
+	    	}
+            
+     function fc_mostra_altera_acao(vcjog) {            	
+                var bool = null;
+                vcodjog=vcjog;
+               
+                bool = $('#mensagem-altera-acao').is(':visible');
+                if (!bool) {
+                	 db.transaction(fc_carrega_alterar_acao, errorCB);
+                     db.transaction(fc_carrega_excluir_acao, errorCB);
+                     
+                    $('#mensagem-altera-acao').show(5);                
+                } else {
+                    $('#mensagem-altera-acao').hide(5);                   
+                }
+            }
+
+    function fc_resultado_altera_acao(vres) {
+	     if (vres==1){
+	    	 //esccolheu uma opcao
+	    	// var vca_alterar = $('#carrega_alterar_acao').val();
+             vacao = $('#carrega_excluir_acao').val();
+	    	 
+             db.transaction(fc_excluir_acao, errorCB);
+             atualiza_notificacoes();
+	    	
+	    	 
+	     }	
+	     fc_mostra_altera_acao(0);
+	     
+	}
+    
+    
+    function fc_excluir_acao(tx){
+    	
+    	 var sql='delete from tbl_jogos_acao  ';
+		 sql += ' where id_jogo =' + vid + ' and codjog =' + vcodjog+' and codcao = '+vacao;    	 
+    	 tx.executeSql(sql);
+    	 if (vgrutel!=0){
+    		 fc_envia_movimento_id(vid);        			
+  		}
+    	 
+	}
+    
+	function fc_carrega_alterar_acao(tx){
+		//   var htm = '';        
+		//   htm += '<option value=0>NÃO ALTERAR</option>';
+        //   htm += '<option value=1>GOL</option>';
+        //   htm += '<option value=2>CARTÃO AZUL</option>';
+        //   htm += '<option value=3>CARTÃO AMARELO</option>';
+        //   htm += '<option value=4>CARTÃO AZUL</option>';
+           
+        //   $('#carrega_alterar_acao').html(htm);
+        //   alert(1);
+           tx.executeSql('select * from tbl_jogador where codjog='+vcodjog, [], sucessCarregaJogador, errorCB);
+          
+	}
+	
+	function fc_carrega_excluir_acao(tx){
+	    tx.executeSql('select * from tbl_jogos_acao where id_jogo='+vid+' and codjog='+vcodjog+' order by codcao ', [], sucessCarregaExcluirAcao, errorCB);
+        //alert(2);
+	}
+	 function sucessCarregaJogador(tx, results) {
+       
+         var vdesjog='';
+         for (var i = 0; i < results.rows.length; i++) {
+             vdesjog = results.rows.item(i).desjog;
+             
+         }
+
+         $('#descricao-altera-acao').text(vdesjog);
+     }
+     
+	 function sucessCarregaExcluirAcao(tx, results) {
+         var htm = '';
+      //   htm += '<option value=0>NÃO EXCLUIR</option>';
+         
+         var vdesacao='NADA PARA EXCLUIR';
+         for (var i = 0; i < results.rows.length; i++) {
+        	 vdesacao='INDEFINIDO'; 
+        	 if (results.rows.item(i).codcao==1){
+        		 vdesacao='GOL';        		 
+        	 } else {
+        		 if (results.rows.item(i).codcao==2){
+        			 vdesacao='CARTÃO AZUL';
+        		 }else {
+        		     if (results.rows.item(i).codcao==3){
+        			    vdesacao='CARTÃO AMARELO';
+        		     } else {
+        		    	 if (results.rows.item(i).codcao==4){
+             			    vdesacao='CARTÃO VERMELHO';
+        		    	 }
+        		     }   
+        		 }
+        	 }
+             htm += '<option value="' + results.rows.item(i).codcao + '">' + vdesacao + '</option>';
+         }
+         
+         $('#carrega_excluir_acao').html(htm);
+     }
+	 
+	 
+	 
+	 function fc_exclui_jogo(){
+     	if(vid != 'null'){
+     		navigator.notification.confirm(
+     		"Deseja, realmente, excluir esse Jogo?",
+     		fc_choice,
+     		"Excluir",
+     		["Sim","Não"]
+     		);
+     		
+     		//db.transaction(fc_deletar_ev, errorCB);
+     	}
+     }
+     
+     function fc_choice(btn){
+     	if(btn == 1){db.transaction(fc_deletar_ev, errorCB);}
+     	if(btn == 2){return;}
+     	
+     }
+     
+     function fc_deletar_ev(tx){
+    	// alert('delete from tbl_jogos where id_jogo =' + vid);
+     	tx.executeSql('delete from tbl_jogos where id_jogo =' + vid, [], successDelete, errorCB);
+     	
+     }
+     
+     function successDelete(){
+     	alert('Jogo excluido com sucesso!');
+     	fc_link('jogos.html');
+     }
+
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                  
+                <img src="img/ic-menu/jogos.png" class="logo-interna" alt="logo" width="40" height="40"/>
+                <span class="titulo-interna"> JOGO EM ANDAMENTO </span>
+                <!-- <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+
+            <div class="item-jogos" style="border: 0;">
+                <div class="foto-time" onclick="fc_selecionar_jogador(1)">
+                    <img src="" id="codtime1" width="70" height="70" />
+                    <span id="time1"> Flamengo </span>
+                </div>
+
+                <div class="jogo-placar">
+                    <div class="jogo-placar-valor">
+                        <span id="gol1" class="jogos-gols-andamento">2</span>  <span class="jogos-x" onclick="fc_exclui_jogo()"  >x</span>  <span id="gol2" class="jogos-gols-andamento" >0</span>
+                    </div>
+                </div>
+
+                <div class="foto-time" onclick="fc_selecionar_jogador(2)">
+                    <img src="" id="codtime2" width="70" height="70" />
+                    <span id="time2"> Teste </span>
+                </div>
+            </div>
+
+            <div id="tempo-do-jogo"> 
+                <div  style="width: 100px; height:20px; text-align: center; color: #fff;  background: #00923D;  margin: 0px auto; border: 2px solid #ccc; border-radius: 7px 7px 0px 0px;">
+                    <span id="periodo_jogo" style="width: 100%; height:100%; font-size: 12px; float:left;margin-top: 2px;  ">Intervalo</span> 
+                 </div>
+            </div>
+
+            <div id="notificacoes-jogo" >
+              <!-- 
+                <div class="n-item">
+                    <div class="item-notificacoes" style="" >
+                        <img src="" width="40" height="40" class="item-noti-img-jogador" />
+                        <span class="item-noti-apelido-jogador"> Thyago </span>
+                        <span class="item-noti-numero-jogador"> 41 </span>
+                        <span class="item-noti-gols-jogador">  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 1px;" > 2 </span>  </span>
+                        <div class="item-noti-cartao-amarelo-jogador inclinar cartao-off">  </div>
+                        <div class="item-noti-cartao-vermelho-jogador inclinar cartao-off">  </div>
+                        <div class="item-noti-cartao-azul-jogador inclinar cartao-off">  </div>
+                    </div>
+                    <div class="item-notificacoes">
+                        <img src="" width="40" height="40" class="item-noti-img-jogador2" />
+                        <span class="item-noti-apelido-jogador2" > Thyago </span>
+                        <span class="item-noti-numero-jogador2" > 41 </span>
+                        <span class="item-noti-gols-jogador2" >  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 1px;" > 2 </span>  </span>
+                        <div class="item-noti-cartao-amarelo-jogador2 inclinar"> 2 </div>
+                        <div class="item-noti-cartao-vermelho-jogador2 inclinar">  </div>
+                        <div class="item-noti-cartao-azul-jogador2 inclinar"> 1 </div>
+                    </div>
+                </div>
+               --> 
+                <div class="clear"> </div>
+            </div>
+            
+            <div class="clear"> </div>
+        </div>
+
+        <!-- **** DIV SELECIONAR JOGADOR [OCULTA] -->
+        <!-- **** DIV SELECIONAR JOGADOR [OCULTA] -->
+        <div id="container-ic-interna-jogador" style=" margin-bottom: 290px; display: none;"> 
+            <div class="item-jogos" style="height: 80px; border: 0; margin: 0px auto; background: transparent; text-align: center; ">
+                <div class="foto-time" style="width: 100%; text-align: center; background: transparent; height: 70px; margin-top:60px">
+                    <img src="" id="selecionarTimeAcao" width="60" height="60" /><br/>
+                </div>
+            </div>
+
+            <div id="tempo-do-jogo" style="float: left; margin-top: -30px;"> 
+                <div style="width: 100px; float: left;  text-align: center; margin-top: 4px; color: #fff; font-size: 14px; background: #00923D; border: 2px solid #ccc; border-radius: 7px 7px 0px 0px;"> Jogadores </div>
+                <span id="seljog-time" style="min-width: 60%; float: right; color: #000; font-size: 14px; text-align: right; margin: 5px 0px 0px 0px; background: transparent;"> Flamengo </span>
+                <div class="clear"></div>
+            </div>
+
+            <div id="notificacoes-jogador"> 
+            <!--
+                <div class="n-item" onclick="fc_select_action()">
+                    <div class="item-notificacoes" style="" >
+                        <img src="" width="40" height="40" class="item-noti-img-jogador" />
+                        <span class="item-noti-apelido-jogador"> Thyago </span>
+                        <span class="item-noti-numero-jogador"> 41 </span>
+                        <span class="item-noti-gols-jogador">  <img src="img/gol-bola.png" width="13" height="13" style="float: left;" /> <span style="float: left; margin-left: 3px;" > 2 </span>  </span>
+                        <div class="item-noti-cartao-amarelo-jogador inclinar cartao-off">  </div>
+                        <div class="item-noti-cartao-vermelho-jogador inclinar cartao-off">  </div>
+                        <div class="item-noti-cartao-azul-jogador inclinar cartao-off">  </div>
+                    </div>
+                    -->
+                </div>
+                
+                <div class="clear"> </div>
+            </div>
+
+            <div class="clear"> </div>
+        </div>
+
+
+
+        <!-- **** DIV SELECIONAR JOGADOR [OCULTA] -->
+        <!-- **** DIV SELECIONAR JOGADOR [OCULTA] -->
+
+        <footer id="cronometro">
+            <div id="encerar-jogo" onclick="fc_mostra_encerrarJogo()"> <span style="width: 100%; text-align: center; float: left; margin-top: 12px;"> ENCERRAR </span> </div>
+            <div id="tempo-jogo"> <span id="tempo-cronometrado" >  </span> </div>
+            <div id="pausar-jogo" onclick="confirmaPausa()"> <span id="textoPausa" style="width: 100%; text-align: center; float: left; margin-top: 12px;"> PAUSAR </span> </div>
+        </footer>
+
+        <footer id="footer-jogador-voltar" class="rodape-fixo" style="display: none">
+            <img src="img/ic-rodape-fixo/voltar.png" style="float: left; margin: 10px 0px 0px 10px;" onclick="fc_selecionar_jogador(null)" />
+            <!-- <img src="img/ic-rodape-fixo/inicio.png" width="41"  style="margin: 13px 0px 0px 0px" />
+             <img src="img/ic-rodape-fixo/pesquisar.png" style="float: right; margin: 13px 10px 0px 0px" />-->
+        </footer>
+
+
+
+        <!--** DIV ESCOLHER CARTAO OU GOL -->
+        <div id="selecionar-acao" style="display: none" onclick="fc_select_action( vitem ,vapelido, vnro, vama , vazu ,vver)">
+            <img src="img/apito.png" id="apito-img" />
+            <div id="texto-arbitro"> nome</div>
+
+            <div class="container-acoes-classe">
+                <div class="centralizar-quadrado">
+                    <div class="arbitro-quadrado"  onclick="fc_arbitro(1)">
+                        <img src="img/bola115x112.png" width="100" height="100" style="float: left; margin: 15px 0px 0px 15px; opacity: 1;" />
+                    </div>
+
+                    <div class="arbitro-quadrado" onclick="fc_arbitro(2)">
+                        <div class="inclinar acao-azul">  </div>
+                    </div>
+
+                    <div class="clear"></div>
+
+                    <div class="arbitro-quadrado"  onclick="fc_arbitro(3)">
+                        <div class="inclinar acao-amarelo">  </div>
+                    </div>
+
+                    <div class="arbitro-quadrado" onclick="fc_arbitro(4)">
+                        <div class="inclinar acao-vermelho">  </div>
+                    </div>
+
+                    <div class="clear"></div>
+                </div>
+            </div>
+
+        </div>
+        
+        
+         <!--** Mensagem Geral -->
+        <div id="mensagem-geral"  class="mensagem-geral-classe" style="display: none" >
+            <div id="descricao-mensagem"  class="descricao-mensagem-classe"> nome</div>
+
+            <div  class="container-acoes-classe"  >
+                <div class="centralizar-quadrado">
+                     <br/>
+                     <br/>
+                     <br/>
+                     
+                     <div class="padrao-btn" style="width: 33%; background: #469325; float: right; font-size: 20px;" onclick="fc_resultado_mensagem(1)"> OK </div>
+                     <div class="padrao-btn" style="width: 33%; background: #006EB2; float: left;  font-size: 20px;" onclick="fc_resultado_mensagem(0)"> CANCELA </div>
+			
+                     <div class="clear"></div>
+                </div>
+            </div>
+
+        </div>
+        <!-- -->
+
+
+        <!-- ** CARTAO AZUL -->
+
+        <div id="cartao-escolhido" style="display: none;" onclick="fc_quit_card()">
+            <div id="cartao-nome-time"> Flamengo </div>
+
+            <div id="cartao-nome-jogador"> Ze Macarrao </div>
+
+            <div id="cartao-numero-jogador"> 9 </div>
+
+            <div id="cartao-voltar"> TOQUE NA TELA PARA VOLTAR</div>
+        </div>
+
+      <!--** Altera Acao -->
+        <div id="mensagem-altera-acao" class="mensagem-geral-classe"  style="display: none" >
+            <div id="descricao-altera-acao" class="descricao-mensagem-classe"> nome</div>
+
+            <div class="container-acoes-classe" >
+                <div id="centralizar-altera-acao">
+                   
+                     
+                 <table class="tbl-inserir-evento">                   
+                   
+
+                    <tr>
+                        <td  style="color: #FFF;font-size: 20px;"> Excluir </td>
+                    </tr>
+                    <tr> 
+                        <td>
+                            <select id="carrega_excluir_acao" class="carrega-select" >
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                </br>
+                </br>
+                     
+                     
+                     
+                     
+                     <div class="padrao-btn" style="width: 33%; background: #469325; float: right; font-size: 20px;" onclick="fc_resultado_altera_acao(1)"> OK </div>
+                     <div class="padrao-btn" style="width: 33%; background: #006EB2; float: left;  font-size: 20px;" onclick="fc_resultado_altera_acao(0)"> CANCELA </div>
+			
+                     <div class="clear"></div>
+                </div>
+            </div>
+
+        </div>
+        <!-- -->
+        <!--** PAUSAR O JOGO -->     
+        <div  id="pausa-jogo" class="mensagem-geral-classe" style="display: none" >
+            <div id="descricao-pausa"  class="descricao-mensagem-classe"> nome</div>
+
+            <div   class="container-acoes-classe"  >
+                <div class="centralizar-quadrado">
+                     </br>
+                     </br>
+                     </br>
+                     
+                     <div class="padrao-btn" style="width: 33%; background: #469325; float: right; font-size: 20px;" onclick="pauseSetInterval()"> OK </div>
+                     <div class="padrao-btn" style="width: 33%; background: #006EB2; float: left;  font-size: 20px;" onclick="confirmaPausa()"> CANCELA </div>
+			
+                     <div class="clear"></div>
+                </div>
+            </div>
+
+        </div>
+        <!-- -->
+       <!--** ENCERRAR O JOGO -->     
+        <div id="encerrar-jogo" class="mensagem-geral-classe" style="display: none" >
+            <div id="descricao-encerrar"  class="descricao-mensagem-classe"> nome</div>
+
+            <div  class="container-acoes-classe"  >
+                <div class="centralizar-quadrado">
+                     <br/>
+                     <br/>
+                     <br/>
+                     
+                     <div class="padrao-btn" style="width: 33%; background: #469325; float: right; font-size: 20px;" onclick="encerrarJogo()"> OK </div>
+                     <div class="padrao-btn" style="width: 33%; background: #006EB2; float: left;  font-size: 20px;" onclick="fc_mostra_encerrarJogo()"> CANCELA </div>
+			
+                     <div class="clear"></div>
+                </div>
+            </div>
+
+        </div>
+        <!-- -->
+  <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+
+    </body>
+</html>

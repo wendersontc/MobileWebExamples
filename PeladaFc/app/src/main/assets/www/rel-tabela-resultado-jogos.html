@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        <script type="text/javascript" src="js/jquery.js" ></script>
+        
+        <script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+		
+
+        <script>
+	        var db = null;
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vdatini=null, vdatfin=null;
+	    	function onLoad() {
+	            validaData('i','#datini');
+	            validaData('i','#datfin');
+	            vdatini = $('#datini').val();
+	    		vdatfin = $('#datfin').val();
+	    		
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		db.transaction(CarregaClassificacao, errorCB, successCB);
+	    	}
+	    	
+	    	function fc_processsa(){
+	    		
+        		vdatini = $('#datini').val();
+	    		vdatfin = $('#datfin').val();
+	    		validaData(vdatini, '#datini');
+	    		validaData(vdatfin, '#datfin');
+	    		vdatini = $('#datini').val();
+	    		vdatfin = $('#datfin').val();
+                db.transaction(CarregaClassificacao, errorCB, successCB);
+	    	}
+	    	
+	    	function CarregaClassificacao(tx){
+	    	
+	    		var sql='select a.*, t1.destim as destim1, t1.sigla as sigla1, t2.destim as destim2, t2.sigla as sigla2 from tbl_jogos a inner join tbl_time t1 on a.codtim1=t1.codtim  inner join tbl_time t2 on a.codtim2=t2.codtim ' +
+	    			' where a.codeve=' + vcodeve+ ' and date>="' + vdatini + '" and date<= "' + vdatfin +'" ' +
+	    			' order by date, id_jogo ';
+	    		
+	    		tx.executeSql(sql, [], listaTabelaClassificacao, errorCB);
+	    	}
+	    	
+	    	function listaTabelaClassificacao(tx, results){
+	    		var htm = '', choiceClass = '', diferentLine = '';
+	    		
+	    		htm +='<table id="tbl-classificacao"> '+
+            		  '<thead> '+
+	            		  '<tr> '+
+	            		    '<th> ID </th> '+
+		          			'<th> Jogos </th> '+
+		          			'<th> Inicio</th> '+
+		          			'<th> Final</th> '+
+	          			  '</tr> '+
+	          		  '</thead> ' +
+	          		  '<tbody> ';
+            		  
+	    		for(var i = 0; i < results.rows.length; i++){
+	    			if(i%2 == 0){
+	    				choiceClass  = 'm2'; 
+	    			}else{
+	    				choiceClass  = 'm1'; 
+	    			}
+	    			
+	    			if(i<=2){
+	    				diferentLine = 'udt';
+	    			}else{
+	    				diferentLine = 'udtMais';
+	    			}
+	    				htm += '<tr class="'+choiceClass+'"> '+
+				    				'<td> <span class="'+diferentLine+'"> '+ eval(i+1) +' </span> ' + '-' + results.rows.item(i).id_jogo+ ' </td> '+
+				    				'<td>'  +  results.rows.item(i).sigla1 + ' ' +  results.rows.item(i).gol1 + ' X ' + results.rows.item(i).gol2 + ' ' + results.rows.item(i).sigla2  + ' </td> '+
+			            			'<td>'  + results.rows.item(i).hora_inicial + ' </td> '+
+			            			'<td>'  + results.rows.item(i).hora_final + ' </td> '+
+			            		'</tr>';
+	    		}
+	    		
+	    		
+	    		htm += '<tr > '+
+				'<td> . </td> '+
+    		     '</tr>';
+    		    htm += '<tr > '+
+ 				'<td> . </td> '+
+     		     '</tr>';
+     		    htm += '<tr > '+
+				'<td> . </td> '+
+    		     '</tr>';
+    		    htm += '<tr > '+
+ 				'<td> . </td> '+
+     		     '</tr>';
+	    		htm += '</tbody> </table>';
+	    				
+        		$('#tblPlace').html(htm);
+	    	}
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                 <img src="img/estatisticas/tabela.png" class="logo-interna" alt="logo" width="45" height=30 style="margin-top: 15px;"/>
+                <span class="titulo-interna"> RESULTADO JOGOS </span>
+            </div>
+        </header>
+        
+        <div id="container-resultado-jogos">
+                <table class="tbl-resultado-jogos">
+                    <tr>
+                        <td> Data Inicial </td>
+                        <td> Data Final</td>
+                         
+                    </tr>
+                    <tr> 
+                        <td> <input type="tel" id="datini" class="input-filtro"   /> </td>
+                        <td> <input type="tel" id="datfin" class="input-filtro"    /> </td>
+                        
+                    </tr>  
+                </table>
+                 <img src="img/refresh.png" onclick="fc_processsa()" class="logo-interna" alt="logo" width="40" height=40 style="float:right; margin: -40px 10px 0px 0px;"/>  
+        </div>
+        
+        
+
+        <div id="container-ic-interna">
+        <div id="tblPlace">
+        </div>
+        
+       </div>
+       <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+    </body>
+</html>

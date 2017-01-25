@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        <script type="text/javascript" src="cordova.js"></script>
+
+        <script type="text/javascript" src="js/jquery.js" ></script>
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+
+
+        <script>
+            var db = null;
+            var vid = sessionStorage.getItem('vId');
+            var vcodeve = localStorage.getItem('codeve');
+            var vgrutel    = localStorage.getItem('grutel');
+            
+           
+            function onLoad() {
+            	validaData('i','#date');
+            	validaHorMin('i','#hri');
+                document.addEventListener("deviceready", onDeviceReady, false);
+            }
+
+            function onDeviceReady() {
+                db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+
+                db.transaction(fc_carrega, errorCB);
+
+                if (vid != 'null') {
+                    db.transaction(editarEvento, errorCB);
+                    $('.adicionar').css('display', 'inline');
+                }
+
+
+            }
+
+            function fc_carrega(tx) {
+            	
+                tx.executeSql('select * from tbl_time  order by destim', [], sucessCarregaTime, errorCB);
+                
+                //tx.executeSql('select distinct id_jogo, codeve from tbl_jogos order by id_jogo ', [], sucessCarregaEvento, errorCB);
+                
+                tx.executeSql('select * from tbl_local   order by desloc', [], sucessCarregaLocal, errorCB);
+                tx.executeSql('select * from tbl_juiz   order by desjuiz', [], sucessCarregaJuiz, errorCB);
+            }
+
+            function sucessCarregaTime(tx, results) {
+                var htm = '';
+                for (var i = 0; i < results.rows.length; i++) {
+                    htm += '<option value="' + results.rows.item(i).codtim + '">' + results.rows.item(i).destim + '</option>';
+                }
+
+                $('#carrega_time1').html(htm);
+                $('#carrega_time2').html(htm);
+            }
+
+            function sucessCarregaEvento(tx, results) {
+
+                for (var i = 0; i < results.rows.length; i++) {
+               	tx.executeSql('update tbl_jogos_acao set codeve=' + results.rows.item(i).codeve +  ' where id_jogo=' + results.rows.item(i).id_jogo) ;
+                }
+
+                
+            }
+            
+            function sucessCarregaLocal(tx, results) {
+                var htm = '';
+                for (var i = 0; i < results.rows.length; i++) {
+                    htm += '<option value="' + results.rows.item(i).codloc + '">' + results.rows.item(i).desloc + '</option>';
+                }
+
+                $('#carrega_local').html(htm);
+            }
+            
+            function sucessCarregaJuiz(tx, results) {
+                var htm = '';
+                for (var i = 0; i < results.rows.length; i++) {
+                    htm += '<option value="' + results.rows.item(i).codjuiz + '">' + results.rows.item(i).desjuiz + '</option>';
+                }
+
+                $('#carrega_juiz').html(htm);
+            }
+
+
+            function editarEvento(tx) {
+                var sql = 'select a.*  ' + 
+                        ' from tbl_jogos a  where a.id_jogo = ' + vid;
+                //alert(sql);
+                tx.executeSql(sql, [], successEditar, errorCB);
+            }
+
+            function successEditar(tx, results) {
+                $('#date').val(results.rows.item(0).date);
+                $('#hri').val(results.rows.item(0).hora_inicial);
+            //    $('#carrega_evento').val(results.rows.item(0).codeve);
+                $('#carrega_time1').val(results.rows.item(0).codtim1);
+                $('#carrega_time2').val(results.rows.item(0).codtim2);
+                $('#carrega_local').val(results.rows.item(0).codloc); //alert(results.rows.item(0).RG);
+                $('#carrega_juiz').val(results.rows.item(0).codjuiz);
+            }
+
+
+            /**
+             * FUNCAO AVANCAR E VOLTAR CADSATRO DE EVENTO
+             */
+            function fc_salva_valida() {
+                var ok = true;
+                var txt = '';
+
+
+                var vdate = $('#date').val();
+                var vhri = $('#hri').val();
+                validaData(vdate, '#date');
+                vdate = $('#date').val();
+                validaHorMin(vhri,'#hri');
+                vhri = $('#hri').val();
+//alert('1');                
+              //  var vcodeve = $('#carrega_evento').val();
+                var vcodtim1 = $('#carrega_time1').val();
+                var vcodtim2 = $('#carrega_time2').val();
+                var vcodloc = $('#carrega_local').val();
+                var vcodjuiz = $('#carrega_juiz').val();
+                
+                if (validaDataFormatado(vdate)){
+                	ok = false;
+                    txt += 'Data Inválida! \n';
+          	 
+          	     }
+                if (validaHorMinFormatado(vhri)){
+                	ok = false;
+                    txt += 'Hora Inicio Inválida! \n';
+          	 
+          	     }
+                if (vdate == '' || vdate == null) {
+                    ok = false;
+                    txt += 'Preencha a data do jogo! \n';
+                }
+               // alert('2');
+
+              //  if (vcodeve == '' || vcodeve == null) {
+              //      ok = false;
+              //      txt += 'Preencha o campo evento! \n';
+             //   }
+
+                if (vcodtim1 == '' || vcodtim1 == null) {
+                    ok = false;
+                    txt += 'Preencha o campo time 1! \n';
+                }
+                
+                if (vcodtim2 == '' || vcodtim2 == null) {
+                    ok = false;
+                    txt += 'Preencha o campo time 2! \n';
+                }
+                if (vcodtim1 == vcodtim2 ) {
+                    ok = false;
+                    txt += 'Time 1 não pode ser igual ao Time 2! \n';
+                }
+
+
+                if (ok) {
+                    salvar_evento();
+                } else {
+                    alert(txt);
+                    return;
+                }
+            }
+
+
+            function salvar_evento() {
+                db.transaction(fc_salvar_evento, errorCB);
+            }
+
+            function fc_salvar_evento(tx) {
+
+            	 var vdate = $('#date').val();
+                 var vhri = $('#hri').val();
+                
+                 
+               //  var vcodeve = $('#carrega_evento').val();
+                 var vcodtim1 = $('#carrega_time1').val();
+                 var vcodtim2 = $('#carrega_time2').val();
+                 var vcodloc = $('#carrega_local').val();
+                 var vcodjuiz = $('#carrega_juiz').val();
+
+           //      alert('3');
+                var sql = '';
+                if (vid == 'null') {
+                    sql =  "insert into tbl_jogos (date, hora_inicial, codeve, codtim1, codtim2, codloc, codjuiz, grutel,";
+                    sql += "hora_inicial_real,hora_final," ;
+                    sql += "primeiro_tempo,primeiro_tempo_real, primeiro_encerrado, intervalo, intervalo_real, intervalo_encerrado,segundo_tempo, segundo_tempo_real, segundo_encerrado," ;
+                    sql += "gol1,gol2, ponto1, ponto2, encerrado,enviado)";
+                    sql += " values ('" + (vdate) + "', '" + vhri + "', " + vcodeve + ", " + vcodtim1 + ", " + vcodtim2 + ", " + vcodloc + ", " + vcodjuiz + "," + vgrutel+ ",";
+                    sql += "'',''," ;
+                    sql += "'00:00','00:00',0,'00:00','00:00',0,'00:00','00:00',0," ;
+                    sql += "0,0,0,0,0, 0)";
+                } else {
+                    sql = "update tbl_jogos set enviado=0, date = '" +  vdate  + "', hora_inicial =  '" + vhri + "', codeve = " + vcodeve + ", codtim1 =  " + vcodtim1 + ", codtim2 =  " + vcodtim2 + ", codloc = " + vcodloc + ", codjuiz =  " + vcodjuiz + " where id_jogo = " + vid;
+                }
+                
+             //   alert(sql);
+             //   console.log(sql);
+                tx.executeSql(sql, [], successCBSQL, errorCB);
+                
+               
+            }
+
+
+            function successCBSQL(tx) {
+            	if (vgrutel != 0){
+            			//so manda jogo q iniciar
+                    //	 OrigemPagina='jogos.html';
+                	  //   ShowHideLoad('true');
+                	//alert(vid);
+                	
+            		  //   fc_envia_movimento_id(vid);
+            	    	 
+            		
+        		}
+        			fc_link('jogos.html');         	
+                	
+        		
+
+               
+            }
+
+            function deletar_evento() {
+                if (vid != 'null') {
+                    navigator.notification.confirm(
+                            "Deseja, realmente, excluir o jogo?",
+                            fc_choice,
+                            "Excluir",
+                            ["Sim", "Não"]
+                            );
+
+                    //db.transaction(fc_deletar_ev, errorCB);
+                }
+            }
+
+            function fc_choice(btn) {
+                if (btn == 1) {
+                    db.transaction(fc_deletar_ev, errorCB);
+                }
+                if (btn == 2) {
+                    return;
+                }
+
+            }
+
+            function fc_deletar_ev(tx) {
+                tx.executeSql('delete from tbl_jogos where id_jogo =' + vid, [], successDelete, errorCB);
+                
+                                
+            }
+
+            function successDelete() {
+              
+                if (vgrutel!=0){
+                	OrigemPagina='jogos.html';
+                	ShowHideLoad('true');
+                	fc_envia_movimento_id(vid);        			
+        		} else {
+        			fc_link('jogos.html');	
+        		}
+                alert('Jogo excluido com sucesso!');
+
+                
+            }
+
+        </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png" class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> CAD. DE JOGO </span>
+                <!-- <img src="img/propriedade-menu.png" width="40" height="45" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+
+                <span class="adicionar" onclick="deletar_evento()" style="color: #f00; display: none"> - </span>
+
+            </div> 
+        </header>
+
+        <div id="container-ic-interna">
+            <div id="cad-parte1">
+                <table class="tbl-inserir-evento">
+                    <tr>
+                        <td> Data(ddmmaa)</td>
+                        <td> Hora(hhmm)</td>
+                    </tr>
+                    <tr> 
+                    	<td> <input type="tel" id="date" class="input-class-cad-evento"  maxlength="10" placeholder="DDMMYY"  /> </td>
+                        <td> <input type="tel" id="hri" class="input-class-cad-evento"  maxlength="5" placeholder="HHMM" /> </td>
+                    </tr>
+
+	<!--
+
+                    <tr>
+                        <td> Evento</td>
+                    </tr>
+                    
+                    
+                    
+                    <tr> 
+                        <td colspan="2">
+                            <select id="carrega_evento"  class="carrega-select" >
+
+                            </select>
+                        </td>
+                    </tr>                    
+                    -->
+
+                    <tr>
+                        <td> Time 1 </td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2">
+                            <select id="carrega_time1" class="carrega-select"  >
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td> Time 2 </td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2">
+                            <select id="carrega_time2" class="carrega-select" >
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td> Local </td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2">
+                            <select id="carrega_local" class="carrega-select" >
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td> Juiz </td>
+                    </tr>
+                    <tr> 
+                        <td colspan="2">
+                            <select id="carrega_juiz" class="carrega-select" >
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+
+
+                <div class="padrao-btn" onclick="fc_salva_valida()" > Salvar</div>
+            </div>
+
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo" id="footer1" >
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+            <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+        
+    </body>
+</html>

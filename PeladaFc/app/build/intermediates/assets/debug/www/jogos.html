@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/jquery.js" ></script>
+        <script type="text/javascript" src="js/scripts-global.js"></script>
+		
+        <script>
+	        var db = null;
+	        sessionStorage.setItem('vId', null);
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+            if (vcodeve=='null' || vcodeve==null){
+    			//alert("Crie um evento para iniciar a Pelada !")
+    			fc_link_consulta('menu.html');
+    			 	
+    		}
+	    	function onLoad() {
+	    		
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		db.transaction(fc_lista_jogos, errorCB);
+	    		
+	    		
+	    	}
+	    	
+	    	function fc_lista_jogos(tx){
+	    		
+	    		
+	    		
+	    		var sql = 'select a.*, j.desjuiz, l.desloc, t1.destim as time1, t2.destim as time2,t1.sigla as sigla1, t2.sigla as sigla2 '+  
+	    		' from tbl_jogos a  inner join tbl_time t1 on a.codtim1 = t1.codtim'+
+	    		' inner join tbl_time t2 on a.codtim2 = t2.codtim ' +
+	    		' left join  tbl_juiz j on a.codjuiz =j.codjuiz ' +
+	    		' left join  tbl_local l on a.codloc  = l.codloc where a.codeve=' + vcodeve + '  order by date desc, id_jogo desc ';
+	    		
+	    		tx.executeSql(sql, [], successLista, errorCB);
+	    	}
+	    	
+	    	function successLista(tx, results){
+	    		var qtd_linhas = results.rows.length;
+	    		var htm = '', htmA = '', htmR = '', htmP='';
+	    		
+	    		for(var i=0; i< qtd_linhas; i++){
+	    			
+	    		    htm = '<div class="item-jogos"  > ' ;
+	    		    if(results.rows.item(i).encerrado ==  1){
+	    		    	htm += '<div class="foto-time" onclick="fc_fim_jogos(' + results.rows.item(i).id_jogo + ')"> ';
+	    		    } else {	    		    
+	    		       htm += '<div class="foto-time" onclick="fc_inicia_jogos(' + results.rows.item(i).id_jogo + ')"> ';	    		    	
+	    		    }   
+	    		    htm += '<img src="file:///mnt/sdcard/peladaFC/time_'+ results.rows.item(i).codtim1  +'.jpg" class="jogos-time-escudo" /> ';
+	    		    htm += '<span>  '+ results.rows.item(i).sigla1 +' </span> ';
+	    		    htm += '</div> ';
+	    		    
+	    		    if(results.rows.item(i).encerrado ==  1){
+	    		    
+	    		    	htm += '<div class="jogo-placar"> ';
+	    		    	htm += '<div class="jogo-placar-valor"> ';
+	    		    	
+	    		    	//htm += "<div style = 'width: 100%; height: 30px;' >  <img src='img/editar.jpg' onclick='fc_editar_evento("+results.rows.item(i).id_jogo+")'  style='float: center; clear:both; margin: 10px 0px 0px 0px;' alt='logo' width='20' height='25'/> </div>";
+	    		    	
+	    		    	
+	    		    	htm += '<span onclick="fc_jogo_andamento(' + results.rows.item(i).id_jogo + ')"> <span class="jogos-gols"> '+ results.rows.item(i).gol1 +' </span>  <span class="jogos-x">x</span>  <span class="jogos-gols" >'+ results.rows.item(i).gol2 +'</span> </span> ';
+	    		    	htm += '</div>';
+	    		    	htm += '<div class="jogo-placar-data"> ';
+	    		    	htm += ' <span class="jogos-data"> '+ results.rows.item(i).date +' </span> '; 
+	    		    	htm += '</div>';
+	    		    	htm += '</div>';
+	    		    
+	    		    } else {
+	    		    	htm += '<div class="jogo-placar"> ';	 	    		 
+	 	    		    htm += '<div class="jogo-placar-data"> ';
+	 	    		    htm += "<div style = 'width: 100%; height: 30px;' >  <img src='img/editar.jpg' onclick='fc_editar_evento("+results.rows.item(i).id_jogo+")'  style='float: center; clear:both; margin: 10px 0px 0px 0px;' alt='logo' width='20' height='25'/> </div>"; 
+	 	    		    htm += ' <div class="jogos-data2"> '+ results.rows.item(i).date + ' '+ results.rows.item(i).hora_inicial + '  </div> ';
+	 	    		    //htm += ' <div class="jogos-hora-inicial"> '+ results.rows.item(i).hora_inicial +' </div> ';
+	 	    		    //htm += ' <div class="jogos-local"> '+ results.rows.item(i).desloc +' </div> ';
+	 	    		    htm += ' <marquee class="jogos-mensagem">Tecle no time para inciar o jogo (local do jogo:' + results.rows.item(i).desloc +' Juiz:'+results.rows.item(i).desjuiz+ ')</marquee> ';
+	 	    		    htm += '</div>';
+	 	    		    htm += '</div>';
+	    		    	
+	    		    	
+	    		    }
+	    		    	
+	    		    
+	    		    
+	    		    
+	    		    
+	    		    if(results.rows.item(i).encerrado ==  1){
+	    		    	
+	    		    	htm += '<div class="foto-time"  onclick="fc_fim_jogos(' + results.rows.item(i).id_jogo + ')">';
+	    		    } else {	    		    
+	    		    	htm += '<div class="foto-time"  onclick="fc_inicia_jogos(' + results.rows.item(i).id_jogo + ')">';	    		    	
+	    		    }
+	    		    
+	    		    htm += ' <img src="file:///mnt/sdcard/peladaFC/time_'+ results.rows.item(i).codtim2  +'.jpg" class="jogos-time-escudo" /> ';
+	    		    htm += ' <span> '+ results.rows.item(i).sigla2 +' </span> ';
+	    		    htm += '</div>';
+	    		    htm += '</div>';
+	    		    
+	    		    if(results.rows.item(i).encerrado ==  1){
+	    		    	htmR += htm;
+	    		    }else{
+	    		    	htmA += htm;
+	    		    }
+	    		}
+
+	    		$('#aba-jogos-agendados').html(htmA+'<br/><br/>');
+	    		$('#aba-jogos-realizados').html(htmR+'<br/><br/>');
+	    	}
+	    	
+	    	
+	    	function fc_editar_evento(idev){
+	    		sessionStorage.setItem('vId', idev);
+	    		
+	   	//	 
+	    		fc_link('cadastro-jogos.html');
+	    	}
+        	
+        
+            function fc_show_hide_abas(bool) {
+                if (bool) {
+                   $('#aba-jogos-agendados').css('display', 'inline');
+                   $('#jogos-agendados').css('border-bottom','5px solid #529E27');
+                   
+                   $('#aba-jogos-realizados').css('display', 'none');
+                   $('#jogos-realizados').css('border-bottom', '5px solid #ECEDEF');
+                } else {
+                   $('#aba-jogos-agendados').css('display', 'none');
+                   $('#jogos-agendados').css('border-bottom','5px solid #ECEDEF');
+                   
+                   $('#aba-jogos-realizados').css('display', 'inline');
+                   $('#jogos-realizados').css('border-bottom', '5px solid #529E27');
+                }
+            }
+            
+            function fc_inicia_jogos(vid){
+	    		sessionStorage.setItem('vId', vid);
+                 	    	
+	    		fc_link('iniciar-jogo.html');
+	    	}
+            
+
+            function fc_jogo_andamento(vid){
+	    		sessionStorage.setItem('vId', vid);
+	    		sessionStorage.setItem('veditar', 1);
+	    		fc_link('jogo-andamento.html');
+	    	}
+            
+            
+            function fc_fim_jogos(vid){
+	    		sessionStorage.setItem('vId', vid);
+	    		fc_link('fim-jogo.html');
+	    	}
+            
+            
+        </script>
+
+    </head>
+    <body  onload="onLoad()">
+        <header style="width: 100%; position: fixed; top: 0; left: 0; z-index: 99999">
+            <div id="menu-topo1">
+                <img src="img/ic-menu/jogos.png" class="logo-interna" alt="logo" width="40" height="40" style="margin-top: 10px;"/>
+                <span class="titulo-interna"> JOGOS </span>
+                 <span class="adicionar" onclick="fc_editar_evento('null')" > + </span>
+            </div>
+            
+            <div id="area-das-abas" style="background: red;">
+                <div id="jogos-agendados" onclick="fc_show_hide_abas(true)" >
+                    <span class="tit-aba-on"> Agendados </span>
+                </div>
+                <div id="jogos-realizados" onclick="fc_show_hide_abas(false)">
+                    <span class="tit-aba-off"> Realizados </span>
+                </div>
+            </div>
+        </header>
+
+        <div id="container-ic-interna" style="margin-top: 50px">
+            <div id="aba-jogos-agendados">
+               <!-- <div class="item-jogos">
+                    <div class="foto-time">
+                        <img src="img/escudos/flamengo.png" class="jogos-time-escudo" />
+                        <span> Flamengo </span>
+                    </div>
+
+                    <div class="jogo-placar">
+                        <div class="jogo-placar-valor">
+                            <span class="jogos-gols">2</span>  <span class="jogos-x">x</span>  <span class="jogos-gols" >0</span>
+                        </div>
+                        <div class="jogo-placar-data">
+                            <span class="jogos-data"> 17/05/2014</span>
+                        </div>
+                    </div>
+
+                    <div class="foto-time">
+                        <img src="img/escudos/flamengo.png" class="jogos-time-escudo" />
+                        <span> Teste </span>
+                    </div>
+                </div>
+                -->
+            </div>
+            
+
+            <div id="aba-jogos-realizados" style="display: none">
+                <!-- 
+                <div class="item-jogos">
+                    <div class="foto-time">
+                        <img src="img/escudos/flamengo.png"  class="jogos-time-escudo" />
+                        <span> Flamengo </span>
+                    </div>
+
+                    <div class="jogo-placar">
+                        <div class="jogo-placar-valor">
+                            <span class="jogos-gols">2</span>  <span class="jogos-x">x</span>  <span class="jogos-gols" >0</span>
+                        </div>
+                        <div class="jogo-placar-data">
+                            <span class="jogos-data"> 17/05/2014</span>
+                        </div>
+                    </div>
+
+                    <div class="foto-time">
+                        <img src="img/escudos/flamengo.png"  class="jogos-time-escudo" />
+                        <span> Teste </span>
+                    </div>
+                </div>
+                 -->
+            </div>
+
+            <div class="clear" style="margin-bottom: 30px;"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+    </body>
+</html>

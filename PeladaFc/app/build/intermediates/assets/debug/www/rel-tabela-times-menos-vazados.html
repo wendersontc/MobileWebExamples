@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        <script type="text/javascript" src="js/jquery.js" ></script>
+         <script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+        <script>
+		        var db = null;
+		        var vcodeve = localStorage.getItem('codeve');
+	            var vdeseve = localStorage.getItem('deseve');
+		    	function onLoad() {
+		    		document.addEventListener("deviceready", onDeviceReady, false);
+		    	}
+		
+		    	function onDeviceReady() {
+		    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+		    		db.transaction(CarregaClassificacao, errorCB, successCB);
+		    	}
+		    	
+		    	function CarregaClassificacao(tx){
+		    		var sql='select * from (select a.codtim, t.destim, t.sigla,sum(jg) as jg, sum(a.gol) as gol, sum(a.gc) as gc, sum(a.ponto) as pt, sum(a.vit) as vit, sum(a.emp) as emp, sum(a.der) as der, sum(a.sg) as sg from ( ' +
+	    			' select codtim1 as codtim,  1 as jg, gol1 as gol, gol2 as gc, ponto1 as ponto, (case when gol1>gol2 then 1 else 0 end) as vit, (case when gol1=gol2 then 1 else 0 end) as emp, (case when gol1<gol2 then 1 else 0 end) as der, gol1-gol2 as sg  from tbl_jogos ' +
+	    			' where codeve=' + vcodeve +
+	    			' union all ' +
+	    			' select codtim2 as codtim,  1 as jg, gol2 as gol, gol1 as gc,ponto2 as ponto, (case when gol2>gol1 then 1 else 0 end) as vit, (case when gol1=gol2 then 1 else 0 end) as emp, (case when gol2<gol1 then 1 else 0 end) as der, gol2-gol1 as sg  from tbl_jogos ' +
+	    			' where codeve=' + vcodeve +
+	    			' ) a inner join tbl_time t on a.codtim=t.codtim ' +
+	    			' group by a.codtim, t.destim, t.sigla) k order by gc, destim ';
+		    		tx.executeSql(sql, [], listaTabelaClassificacao, errorCB);
+		    	}
+		    	
+		    	function listaTabelaClassificacao(tx, results){
+		    		var htm = '', choiceClass = '', diferentLine = '';
+		    		htm +='<table id="tbl-classificacao"> '+
+		        		  '<thead> '+
+		            		  '<tr> '+
+			          			'<th> Classificação </th> '+
+			          			'<th> Gols de adversários </th> '+
+		          			  '</tr> '+
+		          		  '</thead> ' +
+		          		  '<tbody> ';
+		        		  
+		    		for(var i = 0; i < results.rows.length; i++){
+		    			if(i%2 == 0){
+		    				choiceClass  = 'm2'; 
+		    			}else{
+		    				choiceClass  = 'm1'; 
+		    			}
+		    			
+		    			if(i<=2){
+		    				diferentLine = 'udt';
+		    			}else{
+		    				diferentLine = 'udtMais';
+		    			}
+		    				htm += '<tr class="'+choiceClass+'"> '+
+					    				'<td> <span class="'+diferentLine+'"> '+ eval(i+1) +' </span>'+results.rows.item(i).destim+'</td> '+
+				            			'<td>'+results.rows.item(i).gc+'</td> '+
+				            		'</tr>';
+		    		}
+		    		
+		    		htm += '</tbody> </table>';		    				
+		    		$('#tblPlace').html(htm);
+		    	}
+    </script>
+
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                 <img src="img/estatisticas/tabela.png" class="logo-interna" alt="logo" width="45" height=30 style="margin-top: 15px;"/>
+                <span class="titulo-interna"> Times menos vazados </span>
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+        <div id="tblPlace">
+            <table id="tbl-classificacao">
+            <!--  
+            	<thead>
+            		<tr>
+            			<th> Classifica&ccedil;&atilde;o </th>
+            			<th> gols de advers&aacute;rios </th>
+            		</tr>
+            	</thead>
+            	<tbody>
+            		<tr class="m2">
+            			<td> <span class="udt"> 1 </span> SPFC </td>
+            			<td> 9 </td>
+            		</tr>
+            		
+            		<tr class="m1">
+            			<td> <span class="udt"> 2 </span> FLU </td>
+            			<td> 9 </td>
+            		</tr>
+            		
+            		<tr class="m1">
+            			<td> <span class="udt"> 2 </span> COR </td>
+            			<td> 9 </td>
+            		</tr>
+            		
+            		<tr class="m2">
+            			<td> <span class="udtMais"> 2 </span> COR </td>
+            			<td> 9 </td>
+            		</tr>
+            		
+            	</tbody>
+            	-->
+            </table>   
+            </div>         
+            <div class="clear"> </div>
+            <br/><br/>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+            <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+    </body>
+</html>

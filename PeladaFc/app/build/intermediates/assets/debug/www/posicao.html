@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PeladaFC</title>
+        <meta charset="windows-1252">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style-interna.css" />
+        
+        <script type="text/javascript" src="cordova.js"></script>		
+        <script type="text/javascript" src="js/jquery.js" ></script>
+		<script type="text/javascript" src="js/scripts-global.js"></script>
+         
+        <script>
+        
+	        var db = null;
+	        var vcodeve=null;
+	        sessionStorage.setItem('vId', null);
+	        var vcodeve = localStorage.getItem('codeve');
+            var vdeseve = localStorage.getItem('deseve');
+            var vgrutel    = localStorage.getItem('grutel');
+	    	
+	    	function onLoad() {
+	    		document.addEventListener("deviceready", onDeviceReady, false);
+	    	}
+	
+	    	function onDeviceReady() {
+	    		db = window.openDatabase("PeladaFcDatabase", "1.0", "PeladaFC", 2000000);
+	    		db.transaction(fc_lista_eventos, errorCB);
+	    	}
+	    	
+	    	function fc_lista_eventos(tx){
+	    		var sql = 'select * from tbl_posicao  order by codpos desc';
+	    		tx.executeSql(sql, [], successLista, errorCB);
+	    	}
+	    	
+	    	function successLista(tx, results){
+	    		
+	    		var qtd_linhas = results.rows.length;
+	    		var nome_evento = '', idev = '';
+	    		var htm = '';
+	    		var vcons = sessionStorage.getItem('vCons');
+	    		
+	    		
+	    		for(var i=0; i< qtd_linhas; i++){
+	    			nome_evento = results.rows.item(i).despos;
+	    			idev = results.rows.item(i).codpos;
+	    		    
+	    		    htm += "<li >  <span style='font-size:26px;'";
+	    		    if (vcons=1) {
+	    		    	htm += " onclick='fc_retorna("+idev+",menu.html)'>  ";
+	    		    }else{
+	    		        htm += "> ";
+	    		    }
+	    		    
+	    		    htm += nome_evento +" </span> <img src='img/editar.jpg' onclick='fc_editar_local("+idev+")' class='imagem_editar'  alt='logo' width='25' height='25'/> </li> " ;
+	    		}
+	    		
+	    		//alert(htm);
+	    		$('#lista').html(htm+'<br/><br/>');
+	    		
+	    	}
+	    	
+	    		    	
+	    	function fc_editar_local(idev){
+	    		sessionStorage.setItem('vId', idev);
+	    		vcodeve=idev;
+	    		fc_link('cadastro-posicao.html');
+	    	}
+	    	
+	    	             
+            
+        </script>
+        
+    </head>
+    <body onload="onLoad()">
+        <header>
+            <div id="menu-topo1">
+                <img src="img/ic-menu/eventos.png"  class="logo-interna" alt="logo" width="40" height="45"/>
+                <span class="titulo-interna"> POSIÇÃO DO JOGADOR </span>
+                <!-- <img src="img/propriedade-menu.png" id="propriedade-menu" onclick="fc_show_hide_menu()" />  -->
+                <span class="adicionar" onclick="fc_editar_local('null')" > + </span>
+            </div>
+        </header>
+
+        <div id="container-ic-interna">
+            <ul id="lista">
+                <!-- <li> Campeonato Brasileiro 1  <span class="seta-ir">  > </span> </li>  -->
+            </ul>
+            <div class="clear"> </div>
+        </div>
+
+        <footer class="rodape-fixo">
+            <img src="img/ic-rodape-fixo/voltar.png" 	onclick="fc_link_back()"	class="imagens-rodapev" style="float: left; margin: 10px 0px 0px 10px;" />
+            <img src="img/ic-rodape-fixo/inicio.png" 	onclick="fc_link('menu.html')"	class="imagens-rodapeh" style="float: right; margin: 13px 10px 0px 0px" />
+           <!--  <img src="img/ic-rodape-fixo/pesquisar.png" onclick="fc_link_back()"	class="imagens-rodapep" style="float: right; margin: 13px 10px 0px 0px" /> -->
+        </footer>
+
+          <!-- LOAD PROCESSAMENTO !-->
+        <div id="cssLoad" style="width: 100%; height: 100%; display: none; background: rgb(255,255,255); z-index: 999999999999999999; position: absolute; top: 0px; left: 0px; ">	       
+		</div>
+
+
+    </body>
+</html>
